@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Registro a sesión | IC Academy</title>
+  <meta name="description" content="Regístrate a tu sesión de capacitación de IC Academy." />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+</head>
+<body>
+  <div class="icac-shell">
+    <header class="icac-header">
+      <div class="icac-header__brand">
+        <div class="icac-header__logo" aria-hidden="true">IC</div>
+        <p class="icac-header__title">IC Academy &middot; Registro a sesión</p>
+      </div>
+    </header>
+
+    <main class="icac-main" id="icac-main">
+      <!-- Estado: cargando -->
+      <section id="icac-state-loading" class="icac-card icac-state icac-state--info" hidden>
+        <div class="icac-spinner" role="status" aria-label="Cargando"></div>
+        <p class="icac-state__message">Buscando los datos de tu sesión&hellip;</p>
+      </section>
+
+      <!-- Estado: falta el parámetro session en la URL -->
+      <section id="icac-state-no-token" class="icac-card icac-state icac-state--error" hidden>
+        <div class="icac-state__icon" aria-hidden="true">&#9888;</div>
+        <p class="icac-state__title">Falta el código de tu sesión</p>
+        <p class="icac-state__message">
+          Este enlace no incluye la información necesaria para mostrar tu sesión.
+          Vuelve a escanear el código QR que te compartió tu capacitador o revisa
+          que copiaste la liga completa.
+        </p>
+      </section>
+
+      <!-- Estado: error genérico (token inválido, red, servidor) -->
+      <section id="icac-state-error" class="icac-card icac-state icac-state--error" hidden>
+        <div class="icac-state__icon" aria-hidden="true">&#9888;</div>
+        <p class="icac-state__title" id="icac-error-title">No pudimos cargar tu sesión</p>
+        <p class="icac-state__message" id="icac-error-message"></p>
+        <button type="button" class="icac-button icac-button--secondary" id="icac-retry-button">
+          Reintentar
+        </button>
+      </section>
+
+      <!-- Estado: sesión cancelada / cerrada -->
+      <section id="icac-state-closed" class="icac-card icac-state icac-state--closed" hidden>
+        <div class="icac-state__icon" aria-hidden="true">&#128683;</div>
+        <p class="icac-state__title" id="icac-closed-title">El registro no está disponible</p>
+        <p class="icac-state__message" id="icac-closed-message"></p>
+      </section>
+
+      <!-- Estado: sesión llena -->
+      <section id="icac-state-full" class="icac-card icac-state icac-state--full" hidden>
+        <div class="icac-state__icon" aria-hidden="true">&#128694;</div>
+        <p class="icac-state__title">Esta sesión ya no tiene cupo</p>
+        <p class="icac-state__message" id="icac-full-message"></p>
+      </section>
+
+      <!-- Estado: sesión disponible (datos + formulario) -->
+      <section id="icac-state-available" hidden>
+        <article class="icac-card" id="icac-session-card">
+          <span class="icac-badge" id="icac-session-badge">Registro abierto</span>
+          <h1 id="icac-course-name">&nbsp;</h1>
+          <p id="icac-course-description"></p>
+          <ul class="icac-session-facts" id="icac-session-facts"></ul>
+          <p id="icac-public-instructions"></p>
+        </article>
+
+        <article class="icac-card">
+          <h2>Datos del participante</h2>
+          <div class="icac-form-error" id="icac-form-error" role="alert"></div>
+
+          <form class="icac-form" id="icac-register-form" novalidate>
+            <fieldset class="icac-fieldset">
+              <legend class="icac-fieldset__legend">Identificación</legend>
+
+              <div class="icac-field" id="field-employeeNumber">
+                <label class="icac-field__label" for="employeeNumber">
+                  Número de empleado <span class="icac-required" aria-hidden="true">*</span>
+                </label>
+                <input
+                  class="icac-input"
+                  type="text"
+                  id="employeeNumber"
+                  name="employeeNumber"
+                  inputmode="text"
+                  autocomplete="off"
+                  maxlength="30"
+                  required
+                />
+                <span class="icac-field__error">Ingresa tu número de empleado.</span>
+              </div>
+
+              <div class="icac-field" id="field-firstName">
+                <label class="icac-field__label" for="firstName">
+                  Nombre(s) <span class="icac-required" aria-hidden="true">*</span>
+                </label>
+                <input
+                  class="icac-input"
+                  type="text"
+                  id="firstName"
+                  name="firstName"
+                  autocomplete="given-name"
+                  maxlength="100"
+                  required
+                />
+                <span class="icac-field__error">Ingresa tu nombre.</span>
+              </div>
+
+              <div class="icac-field" id="field-lastName">
+                <label class="icac-field__label" for="lastName">
+                  Apellidos <span class="icac-required" aria-hidden="true">*</span>
+                </label>
+                <input
+                  class="icac-input"
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  autocomplete="family-name"
+                  maxlength="100"
+                  required
+                />
+                <span class="icac-field__error">Ingresa tus apellidos.</span>
+              </div>
+            </fieldset>
+
+            <fieldset class="icac-fieldset">
+              <legend class="icac-fieldset__legend">Contacto</legend>
+
+              <div class="icac-field" id="field-corporateEmail">
+                <label class="icac-field__label" for="corporateEmail">
+                  Correo corporativo <span class="icac-required" aria-hidden="true">*</span>
+                </label>
+                <input
+                  class="icac-input"
+                  type="email"
+                  id="corporateEmail"
+                  name="corporateEmail"
+                  autocomplete="email"
+                  maxlength="150"
+                  required
+                />
+                <span class="icac-field__error">Ingresa un correo válido.</span>
+              </div>
+
+              <div class="icac-field" id="field-personalEmail">
+                <label class="icac-field__label" for="personalEmail">Correo personal (opcional)</label>
+                <input
+                  class="icac-input"
+                  type="email"
+                  id="personalEmail"
+                  name="personalEmail"
+                  autocomplete="email"
+                  maxlength="150"
+                />
+                <span class="icac-field__error">Ingresa un correo válido.</span>
+              </div>
+
+              <div class="icac-field" id="field-phone">
+                <label class="icac-field__label" for="phone">Teléfono (opcional)</label>
+                <input
+                  class="icac-input"
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  autocomplete="tel"
+                  maxlength="20"
+                />
+                <span class="icac-field__error">Ingresa un teléfono válido.</span>
+              </div>
+            </fieldset>
+
+            <fieldset class="icac-fieldset">
+              <legend class="icac-fieldset__legend">Datos laborales</legend>
+
+              <div class="icac-field" id="field-position">
+                <label class="icac-field__label" for="position">
+                  Puesto <span class="icac-required" aria-hidden="true">*</span>
+                </label>
+                <input class="icac-input" type="text" id="position" name="position" maxlength="100" required />
+                <span class="icac-field__error">Ingresa tu puesto.</span>
+              </div>
+
+              <div class="icac-field" id="field-area">
+                <label class="icac-field__label" for="area">
+                  Área <span class="icac-required" aria-hidden="true">*</span>
+                </label>
+                <input class="icac-input" type="text" id="area" name="area" maxlength="100" required />
+                <span class="icac-field__error">Ingresa tu área.</span>
+              </div>
+
+              <div class="icac-field" id="field-client">
+                <label class="icac-field__label" for="client">Cliente (opcional)</label>
+                <input class="icac-input" type="text" id="client" name="client" maxlength="100" />
+              </div>
+
+              <div class="icac-field" id="field-installation">
+                <label class="icac-field__label" for="installation">Instalación (opcional)</label>
+                <input class="icac-input" type="text" id="installation" name="installation" maxlength="100" />
+              </div>
+            </fieldset>
+
+            <fieldset class="icac-fieldset">
+              <legend class="icac-fieldset__legend">Confirmación</legend>
+
+              <div class="icac-checkbox-row" id="field-privacyAccepted">
+                <input type="checkbox" id="privacyAccepted" name="privacyAccepted" required />
+                <label for="privacyAccepted">
+                  He leído y acepto el
+                  <a id="icac-privacy-link" href="#" target="_blank" rel="noopener noreferrer">aviso de privacidad</a>
+                  de IC Academy. <span class="icac-required" aria-hidden="true">*</span>
+                </label>
+              </div>
+
+              <div class="icac-checkbox-row" id="field-dataConfirmed">
+                <input type="checkbox" id="dataConfirmed" name="dataConfirmed" required />
+                <label for="dataConfirmed">
+                  Confirmo que los datos capturados son correctos.
+                  <span class="icac-required" aria-hidden="true">*</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <button type="submit" class="icac-button" id="icac-submit-button">
+              Confirmar registro
+            </button>
+          </form>
+        </article>
+      </section>
+
+      <!-- Estado: ya registrado previamente -->
+      <section id="icac-state-already" class="icac-card icac-state icac-state--info" hidden>
+        <div class="icac-state__icon" aria-hidden="true">&#8505;</div>
+        <p class="icac-state__title">Ya tienes un registro para esta sesión</p>
+        <p class="icac-state__message" id="icac-already-message"></p>
+      </section>
+
+      <!-- Estado: registro exitoso -->
+      <section id="icac-state-success" class="icac-card icac-state icac-state--success" hidden>
+        <div class="icac-state__icon" aria-hidden="true">&#10003;</div>
+        <p class="icac-state__title">¡Registro completado!</p>
+        <p class="icac-state__message" id="icac-success-message"></p>
+        <p class="icac-state__message" id="icac-success-next-step"></p>
+      </section>
+    </main>
+
+    <footer class="icac-footer">
+      <p>IC Academy &middot; Este formulario no solicita contraseñas ni datos bancarios.</p>
+    </footer>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/registro.js"></script>
+</body>
+</html>

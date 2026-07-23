@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>IC Academy | Registro a sesiones de capacitación</title>
+  <meta
+    name="description"
+    content="Escanea el código QR de tu sesión de capacitación de IC Academy para registrarte."
+  />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <div class="icac-shell">
+    <header class="icac-header">
+      <div class="icac-header__brand">
+        <div class="icac-header__logo" aria-hidden="true">IC</div>
+        <p class="icac-header__title">IC Academy</p>
+      </div>
+    </header>
+
+    <main class="icac-main">
+      <section class="icac-card icac-state icac-state--info">
+        <div class="icac-state__icon" aria-hidden="true">&#128241;</div>
+        <p class="icac-state__title">Regístrate escaneando el código QR</p>
+        <p class="icac-state__message">
+          Cada sesión de capacitación tiene su propio código QR. Escanéalo con la
+          cámara de tu celular para abrir el formulario de registro de tu sesión.
+        </p>
+      </section>
+
+      <section class="icac-card">
+        <h2>¿Tienes la liga de tu sesión?</h2>
+        <p>Si tu capacitador te compartió el código de tu sesión en lugar del QR, pégalo aquí:</p>
+        <form class="icac-landing-form" id="icac-landing-form">
+          <div class="icac-field">
+            <label class="icac-field__label" for="icac-landing-token">Código de sesión</label>
+            <input
+              class="icac-input"
+              type="text"
+              id="icac-landing-token"
+              name="token"
+              autocomplete="off"
+              placeholder="Ej. 31d40f97467544cec726691a"
+            />
+          </div>
+          <button type="submit" class="icac-button">Ir a mi registro</button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="icac-footer">
+      <p>IC Academy &middot; Este sitio no solicita contraseñas ni datos bancarios.</p>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+      var form = document.getElementById("icac-landing-form");
+      form.addEventListener("submit", function (evt) {
+        evt.preventDefault();
+        var token = document.getElementById("icac-landing-token").value.trim();
+        if (!token) return;
+        window.location.href = "registro/?session=" + encodeURIComponent(token);
+      });
+    })();
+  </script>
+</body>
+</html>
