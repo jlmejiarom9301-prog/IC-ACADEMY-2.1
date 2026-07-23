@@ -21,6 +21,14 @@
   box-sizing: border-box;
 }
 
+/* Refuerza el atributo nativo [hidden]: sin esto, selectores de clase como
+   .icac-state (display:flex) empatan en especificidad con la regla
+   [hidden]{display:none} de la hoja de estilos del navegador y, como esta
+   hoja carga después, ganan y muestran varias secciones de estado a la vez. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }
