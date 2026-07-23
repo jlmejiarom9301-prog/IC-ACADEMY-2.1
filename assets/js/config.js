@@ -38,11 +38,11 @@
 
     // API pública GET: consulta los datos públicos de una sesión por su token
     publicSessionApiUrl:
-      "https://jmejiaromero.app.n8n.cloud/webhook/2e778063-1b7f-41b6-8657-0b7a2f2bb229/icac/public/session",
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/session",
 
     // API pública POST: registra a un participante en una sesión
     publicRegisterApiUrl:
-      "https://jmejiaromero.app.n8n.cloud/webhook/4f110260-ccca-49e9-85f1-f3b1f5a8b79d/icac/public/register",
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/register",
 
     // Liga al aviso de privacidad mostrado en el formulario de registro.
     // TODO: reemplazar por la URL real del aviso de privacidad de IC Academy.
