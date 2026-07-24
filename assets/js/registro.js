@@ -26,9 +26,11 @@
     available: document.getElementById("icac-state-available"),
     already: document.getElementById("icac-state-already"),
     alreadyMessage: document.getElementById("icac-already-message"),
+    alreadyEvaluationButton: document.getElementById("icac-already-evaluation-button"),
     success: document.getElementById("icac-state-success"),
     successMessage: document.getElementById("icac-success-message"),
     successNextStep: document.getElementById("icac-success-next-step"),
+    successEvaluationButton: document.getElementById("icac-success-evaluation-button"),
 
     courseName: document.getElementById("icac-course-name"),
     courseDescription: document.getElementById("icac-course-description"),
@@ -155,12 +157,30 @@
     showOnly(els.full);
   }
 
+  /**
+   * Muestra el botón "Continuar a mi capacitación" cuando la API devuelve
+   * un Token individual (participantToken). El token viaja en la URL igual
+   * que en el resto del sitio (no se guarda en localStorage/sessionStorage).
+   */
+  function wireEvaluationButton(buttonEl, data) {
+    if (!buttonEl) return;
+    if (data && data.participantToken) {
+      buttonEl.hidden = false;
+      buttonEl.onclick = function () {
+        window.location.href = "../evaluacion/?token=" + encodeURIComponent(data.participantToken);
+      };
+    } else {
+      buttonEl.hidden = true;
+    }
+  }
+
   function showAlready(data, fallbackMessage) {
     var message = fallbackMessage || "Ya tienes un registro para esta sesión.";
     if (data && data.courseName) {
       message += " Curso: " + data.courseName + ".";
     }
     setText(els.alreadyMessage, message);
+    wireEvaluationButton(els.alreadyEvaluationButton, data);
     showOnly(els.already);
   }
 
@@ -169,11 +189,14 @@
     if (data && data.nextStep === "WAIT_FOR_EVALUATION") {
       setText(
         els.successNextStep,
-        "Cuando tu capacitador habilite la evaluación, te compartirá cómo acceder a ella."
+        data && data.participantToken
+          ? "Cuando tu capacitador habilite la evaluación, podrás presentarla desde el botón de abajo."
+          : "Cuando tu capacitador habilite la evaluación, te compartirá cómo acceder a ella."
       );
     } else {
       setText(els.successNextStep, "No necesitas hacer nada más por ahora. ¡Gracias por registrarte!");
     }
+    wireEvaluationButton(els.successEvaluationButton, data);
     showOnly(els.success);
   }
 

@@ -428,3 +428,253 @@ body {
     --icac-max-width: 720px;
   }
 }
+
+/* ------------------------------------------------------------------------
+   Evaluación (/evaluacion/) y Resultado (/resultado/)
+   Mismos componentes base (icac-card, icac-state, icac-button, icac-input);
+   estas reglas solo agregan lo específico de preguntas/opciones/progreso.
+   ------------------------------------------------------------------------ */
+
+.icac-eval-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--icac-gray-600);
+  margin-bottom: 8px;
+}
+
+.icac-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--icac-gray-100);
+  overflow: hidden;
+  margin: 8px 0 20px;
+}
+
+.icac-progress__fill {
+  height: 100%;
+  background: var(--icac-blue);
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.icac-question__section {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--icac-gray-600);
+  margin: 0 0 6px;
+}
+
+.icac-question__text {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.icac-question__meta {
+  font-size: 12px;
+  color: var(--icac-gray-600);
+  margin: 0 0 16px;
+}
+
+.icac-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.icac-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--icac-gray-300);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.icac-option:has(input:checked) {
+  border-color: var(--icac-blue);
+  background: #eef4fb;
+}
+
+.icac-option input[type="radio"],
+.icac-option input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  margin-top: 1px;
+  accent-color: var(--icac-blue);
+}
+
+.icac-option__text {
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.icac-textarea {
+  appearance: none;
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  font-size: 16px;
+  font-family: inherit;
+  border: 1px solid var(--icac-gray-300);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--icac-gray-900);
+  resize: vertical;
+}
+
+.icac-textarea:focus {
+  outline: none;
+  border-color: var(--icac-blue);
+  box-shadow: 0 0 0 var(--icac-focus-ring);
+}
+
+.icac-scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.icac-scale__option {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--icac-gray-300);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.icac-scale__option.is-selected {
+  border-color: var(--icac-blue);
+  background: var(--icac-blue);
+  color: #fff;
+}
+
+.icac-readonly-note {
+  font-size: 12px;
+  color: var(--icac-gray-600);
+  margin-top: 4px;
+}
+
+.icac-input[readonly] {
+  background: var(--icac-gray-100);
+  color: var(--icac-gray-600);
+}
+
+.icac-eval-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.icac-eval-nav .icac-button {
+  flex: 1;
+}
+
+.icac-question-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.icac-question-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--icac-gray-300);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icac-question-dot.is-current {
+  border-color: var(--icac-blue);
+  box-shadow: 0 0 0 2px #d8e8fb;
+}
+
+.icac-question-dot.is-answered {
+  background: #e6f4ea;
+  border-color: var(--icac-green);
+  color: var(--icac-green);
+}
+
+/* Resultado */
+.icac-result-score {
+  font-size: 44px;
+  font-weight: 800;
+  margin: 4px 0;
+}
+
+.icac-result-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.icac-result-badge--approved {
+  background: #e6f4ea;
+  color: var(--icac-green);
+}
+
+.icac-result-badge--rejected {
+  background: #fdeceb;
+  color: var(--icac-red);
+}
+
+.icac-result-facts {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.icac-result-facts__item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  border-bottom: 1px solid var(--icac-gray-100);
+  padding-bottom: 8px;
+}
+
+.icac-result-facts__label {
+  color: var(--icac-gray-600);
+}
+
+.icac-result-facts__value {
+  font-weight: 700;
+}
+
+@media (min-width: 480px) {
+  .icac-eval-nav {
+    justify-content: flex-end;
+  }
+
+  .icac-eval-nav .icac-button {
+    flex: 0 0 auto;
+    min-width: 140px;
+  }
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Resultado de tu evaluación | IC Academy</title>
+  <meta name="description" content="Consulta el resultado de tu evaluación de IC Academy." />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+</head>
+<body>
+  <div class="icac-shell">
+    <header class="icac-header">
+      <div class="icac-header__brand">
+        <div class="icac-header__logo" aria-hidden="true">IC</div>
+        <p class="icac-header__title">IC Academy &middot; Resultado</p>
+      </div>
+    </header>
+
+    <main class="icac-main" id="icac-main">
+      <!-- Estado: cargando -->
+      <section id="icac-state-loading" class="icac-card icac-state icac-state--info" hidden>
+        <div class="icac-spinner" role="status" aria-label="Cargando"></div>
+        <p class="icac-state__message">Buscando tu resultado&hellip;</p>
+      </section>
+
+      <!-- Estado: falta el parámetro token -->
+      <section id="icac-state-no-token" class="icac-card icac-state icac-state--error" hidden>
+        <div class="icac-state__icon" aria-hidden="true">&#9888;</div>
+        <p class="icac-state__title">Falta el código de tu resultado</p>
+        <p class="icac-state__message">
+          Este enlace no incluye la información necesaria para mostrar tu resultado.
+          Usa el enlace que recibiste al terminar tu evaluación.
+        </p>
+      </section>
+
+      <!-- Estado: error genérico -->
+      <section id="icac-state-error" class="icac-card icac-state icac-state--error" hidden>
+        <div class="icac-state__icon" aria-hidden="true">&#9888;</div>
+        <p class="icac-state__title" id="icac-error-title">No pudimos cargar tu resultado</p>
+        <p class="icac-state__message" id="icac-error-message"></p>
+        <button type="button" class="icac-button icac-button--secondary" id="icac-retry-button">Reintentar</button>
+      </section>
+
+      <!-- Estado: resultado -->
+      <section id="icac-state-result" hidden>
+        <article class="icac-card" style="text-align: center;">
+          <span class="icac-result-badge" id="icac-result-badge">Resultado</span>
+          <h1 id="icac-result-title">&nbsp;</h1>
+          <p class="icac-result-score" id="icac-result-score" hidden></p>
+          <p class="icac-state__message" id="icac-result-message"></p>
+        </article>
+
+        <article class="icac-card">
+          <h2>Detalle</h2>
+          <ul class="icac-result-facts" id="icac-result-facts"></ul>
+        </article>
+
+        <article class="icac-card icac-state icac-state--info" id="icac-cert-card" hidden>
+          <p class="icac-state__title">Certificado</p>
+          <p class="icac-state__message" id="icac-cert-message">
+            Cumples los requisitos para tu certificado. Tu capacitador te compartirá cómo obtenerlo.
+          </p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="icac-footer">
+      <p>IC Academy &middot; Esta página no solicita contraseñas ni datos bancarios.</p>
+    </footer>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/resultado.js"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Evaluación | IC Academy</title>
+  <meta name="description" content="Presenta la evaluación de tu curso de IC Academy." />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+</head>
+<body>
+  <div class="icac-shell">
+    <header class="icac-header">
+      <div class="icac-header__brand">
+        <div class="icac-header__logo" aria-hidden="true">IC</div>
+        <p class="icac-header__title">IC Academy &middot; Evaluación</p>
+      </div>
+    </header>
+
+    <main class="icac-main" id="icac-main">
+      <!-- Estado: cargando -->
+      <section id="icac-state-loading" class="icac-card icac-state icac-state--info" hidden>
+        <div class="icac-spinner" role="status" aria-label="Cargando"></div>
+        <p class="icac-state__message" id="icac-loading-message">Buscando los datos de tu evaluación&hellip;</p>
+      </section>
+
+      <!-- Estado: falta el parámetro token en la URL -->
+      <section id="icac-state-no-token" class="icac-card icac-state icac-state--error" hidden>
+        <div class="icac-state__icon" aria-hidden="true">&#9888;</div>
+        <p class="icac-state__title">Falta el código de tu evaluación</p>
+        <p class="icac-state__message">
+          Este enlace no incluye la información necesaria para mostrar tu evaluación.
+          Usa el enlace que te compartimos al confirmar tu registro.
+        </p>
+      </section>
+
+      <!-- Estado: error/cerrado genérico (código + mensaje dinámicos) -->
+      <section id="icac-state-blocked" class="icac-card icac-state icac-state--closed" hidden>
+        <div class="icac-state__icon" aria-hidden="true" id="icac-blocked-icon">&#128683;</div>
+        <p class="icac-state__title" id="icac-blocked-title">La evaluación no está disponible</p>
+        <p class="icac-state__message" id="icac-blocked-message"></p>
+        <button type="button" class="icac-button icac-button--secondary" id="icac-retry-button" hidden>
+          Reintentar
+        </button>
+      </section>
+
+      <!-- Estado: ya aprobada previamente -->
+      <section id="icac-state-approved" class="icac-card icac-state icac-state--success" hidden>
+        <div class="icac-state__icon" aria-hidden="true">&#10003;</div>
+        <p class="icac-state__title">Ya aprobaste esta evaluación</p>
+        <p class="icac-state__message" id="icac-approved-message">No necesitas presentarla de nuevo.</p>
+        <button type="button" class="icac-button" id="icac-approved-result-button">Ver mi resultado</button>
+      </section>
+
+      <!-- Estado: pantalla de inicio (info de la evaluación + botón) -->
+      <section id="icac-state-start" hidden>
+        <article class="icac-card" id="icac-start-card">
+          <span class="icac-badge" id="icac-start-badge">Evaluación disponible</span>
+          <h1 id="icac-eval-name">&nbsp;</h1>
+          <ul class="icac-session-facts" id="icac-start-facts"></ul>
+          <p class="icac-state__message" id="icac-start-instructions"></p>
+          <div class="icac-form-error" id="icac-start-error" role="alert"></div>
+          <button type="button" class="icac-button" id="icac-start-button">Comenzar evaluación</button>
+        </article>
+      </section>
+
+      <!-- Estado: cuestionario (una pregunta a la vez) -->
+      <section id="icac-state-quiz" hidden>
+        <article class="icac-card">
+          <div class="icac-eval-header">
+            <span id="icac-quiz-position">Pregunta 1 de 11</span>
+            <span id="icac-quiz-section"></span>
+          </div>
+          <div class="icac-progress">
+            <div class="icac-progress__fill" id="icac-quiz-progress-fill" style="width: 0%"></div>
+          </div>
+
+          <div id="icac-quiz-question-wrap">
+            <p class="icac-question__section" id="icac-question-section"></p>
+            <h2 class="icac-question__text" id="icac-question-text">&nbsp;</h2>
+            <p class="icac-question__meta" id="icac-question-meta"></p>
+            <div id="icac-question-input"></div>
+          </div>
+
+          <div class="icac-form-error" id="icac-quiz-error" role="alert"></div>
+
+          <div class="icac-eval-nav">
+            <button type="button" class="icac-button icac-button--secondary" id="icac-quiz-prev">Anterior</button>
+            <button type="button" class="icac-button" id="icac-quiz-next">Siguiente</button>
+            <button type="button" class="icac-button" id="icac-quiz-submit" hidden>Enviar evaluación</button>
+          </div>
+
+          <nav aria-label="Ir a una pregunta">
+            <ul class="icac-question-list" id="icac-question-dots"></ul>
+          </nav>
+        </article>
+      </section>
+
+      <!-- Estado: enviando -->
+      <section id="icac-state-submitting" class="icac-card icac-state icac-state--info" hidden>
+        <div class="icac-spinner" role="status" aria-label="Enviando"></div>
+        <p class="icac-state__message">Enviando y calificando tu evaluación&hellip;</p>
+      </section>
+    </main>
+
+    <footer class="icac-footer">
+      <p>IC Academy &middot; Esta evaluación no solicita contraseñas ni datos bancarios.</p>
+    </footer>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/evaluacion.js"></script>
+</body>
+</html>

@@ -20,18 +20,24 @@
 (function () {
   "use strict";
 
-  // Detecta si el sitio se sirve desde el proyecto de pruebas
-  // (https://icacademy-demo.github.io/ic-academy-pruebas) o desde producción
-  // (https://icacademy-demo.github.io). Es solo informativo: hoy ambos ambientes
-  // usan las mismas APIs públicas de n8n, diferenciadas internamente por la
-  // bandera "modo_prueba" y el campo "Registro de prueba" en Airtable.
-  var isTestSite =
-    window.location.hostname === "icacademy-demo.github.io" &&
-    window.location.pathname.indexOf("/ic-academy-pruebas") === 0;
+  // Sitio real: https://jlmejiarom9301-prog.github.io/IC-ACADEMY-2.1/
+  // "localhost"/127.0.0.1 se trata como ambiente de prueba local; cualquier
+  // otro host (incluido el sitio real) se trata como producción. Es solo
+  // informativo: no cambia el comportamiento de la API, que siempre se
+  // diferencia internamente por la bandera "modo_prueba" y el campo
+  // "Registro de prueba" en Airtable.
+  var isLocalTestSite =
+    window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
+  // IMPORTANTE: las URLs de los webhooks de n8n de este proyecto NO llevan el
+  // UUID del webhook en la ruta (a diferencia de lo que muestra la ficha del
+  // trigger en el editor de n8n). Se verificó con solicitudes HTTP reales
+  // desde el sitio publicado en jlmejiarom9301-prog.github.io/IC-ACADEMY-2.1
+  // que la URL CON UUID falla (CORS/ruteo) y la URL SIN UUID responde 200
+  // con el cuerpo esperado. No agregar el UUID de vuelta sin volver a probar.
   window.ICAC_CONFIG = {
     // Ambiente detectado (solo informativo/depuración, no cambia el comportamiento de la API)
-    environment: isTestSite ? "test" : "production",
+    environment: isLocalTestSite ? "test" : "production",
 
     // Nombre visible de la plataforma
     platformName: "IC Academy",
@@ -43,6 +49,23 @@
     // API pública POST: registra a un participante en una sesión
     publicRegisterApiUrl:
       "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/register",
+
+    // API pública GET: consulta la disponibilidad de la evaluación de un participante por su Token individual
+    publicEvaluationApiUrl:
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/evaluation",
+
+    // API pública POST: inicia (o reanuda) un intento de evaluación
+    startAttemptApiUrl:
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/evaluation/start",
+
+    // API pública POST: envía y califica las respuestas de un intento de evaluación
+    submitAnswersApiUrl:
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/evaluation/submit",
+
+    // API pública GET: consulta el resultado ya calificado por su Token de resultado
+    // (usada por /resultado/ en vez de confiar en parámetros de la URL)
+    getResultApiUrl:
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/evaluation/result",
 
     // Liga al aviso de privacidad mostrado en el formulario de registro.
     // TODO: reemplazar por la URL real del aviso de privacidad de IC Academy.
