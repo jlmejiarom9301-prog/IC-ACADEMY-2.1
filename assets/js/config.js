@@ -67,6 +67,34 @@
     getResultApiUrl:
       "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/evaluation/result",
 
+    // API pública GET: consulta el estatus público de UN certificado por su
+    // Código de validación (usada por /validar-certificado/)
+    publicCertificateApiUrl:
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/certificate",
+
+    // API pública GET: descarga el PDF de un certificado por su Token de
+    // descarga (streaming binario; se usa como href directo, no con fetch())
+    certificateDownloadApiUrl:
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/certificate/download",
+
+    // API pública GET: consulta el/los certificado(s) asociados al Token
+    // individual de un participante (usada por /certificados/)
+    certificatesByParticipantApiUrl:
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/certificates",
+
+    // API pública GET: consulta los datos de presentación de una sesión por
+    // su Token de presentación (usada exclusivamente por /capacitador/, NO
+    // por colaboradores). Nunca devuelve Record IDs, token individual, token
+    // de resultado, token de descarga ni información personal de asistentes.
+    publicPresentationApiUrl:
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/presentation",
+
+    // API pública POST: persiste el tema actual y el estatus de la
+    // presentación (No iniciada/En presentación/Pausada/Finalizada), para
+    // que el capacitador pueda recargar la página sin perder el avance.
+    updatePresentationApiUrl:
+      "https://jmejiaromero.app.n8n.cloud/webhook/icac/public/presentation/update",
+
     // Liga al aviso de privacidad mostrado en el formulario de registro.
     // TODO: reemplazar por la URL real del aviso de privacidad de IC Academy.
     privacyNoticeUrl: "https://www.icacademy-demo.example.com/aviso-de-privacidad"

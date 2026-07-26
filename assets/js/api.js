@@ -285,12 +285,177 @@
       });
   }
 
+  /**
+   * Consulta el estatus público de un certificado por su Código de validación.
+   * GET {publicCertificateApiUrl}?code=CODIGO_VALIDACION
+   * Usada por /validar-certificado/. Nunca expone tokens, Record IDs ni
+   * información técnica: solo folio, participante, curso, fechas, estatus.
+   */
+  function getCertificate(validationCode) {
+    var base = window.ICAC_CONFIG.publicCertificateApiUrl;
+    var url = base + "?code=" + encodeURIComponent(validationCode);
+
+    return fetchWithTimeout(url, { method: "GET", headers: { Accept: "application/json" } })
+      .then(function (response) {
+        return response
+          .json()
+          .catch(function () {
+            return null;
+          })
+          .then(function (body) {
+            if (!body || typeof body.code !== "string") {
+              return normalizeError(
+                "INVALID_RESPONSE",
+                "No pudimos leer la respuesta del servidor. Intenta de nuevo más tarde."
+              );
+            }
+            return body;
+          });
+      })
+      .catch(function (err) {
+        debugLog("getCertificate() error:", err && err.message);
+        return normalizeError(
+          "NETWORK_ERROR",
+          "No pudimos conectar con el servidor. Verifica tu conexión a internet e intenta de nuevo."
+        );
+      });
+  }
+
+  /**
+   * Consulta el/los certificado(s) del participante dueño de un Token
+   * individual. GET {certificatesByParticipantApiUrl}?token=TOKEN_INDIVIDUAL
+   * Usada por /certificados/. Nunca expone tokens de descarga crudos fuera
+   * de la URL de descarga ya construida por el backend.
+   */
+  function getCertificatesByParticipant(individualToken) {
+    var base = window.ICAC_CONFIG.certificatesByParticipantApiUrl;
+    var url = base + "?token=" + encodeURIComponent(individualToken);
+
+    return fetchWithTimeout(url, { method: "GET", headers: { Accept: "application/json" } })
+      .then(function (response) {
+        return response
+          .json()
+          .catch(function () {
+            return null;
+          })
+          .then(function (body) {
+            if (!body || typeof body.success !== "boolean") {
+              return normalizeError(
+                "INVALID_RESPONSE",
+                "No pudimos leer la respuesta del servidor. Intenta de nuevo más tarde."
+              );
+            }
+            return body;
+          });
+      })
+      .catch(function (err) {
+        debugLog("getCertificatesByParticipant() error:", err && err.message);
+        return normalizeError(
+          "NETWORK_ERROR",
+          "No pudimos conectar con el servidor. Verifica tu conexión a internet e intenta de nuevo."
+        );
+      });
+  }
+
+  /**
+   * Construye la URL de descarga directa de un certificado a partir de su
+   * Token de descarga. Se usa como href de un <a> (nunca con fetch()): el
+   * navegador maneja la descarga binaria mediante el header
+   * Content-Disposition que ya envía el backend.
+   */
+  function buildCertificateDownloadUrl(downloadToken) {
+    var base = window.ICAC_CONFIG.certificateDownloadApiUrl;
+    return base + "?token=" + encodeURIComponent(downloadToken);
+  }
+
+  /**
+   * Consulta los datos de presentación de una sesión por su Token de
+   * presentación. GET {publicPresentationApiUrl}?session=TOKEN_PRESENTACION
+   * Usada exclusivamente por /capacitador/ (modo presentación presencial).
+   */
+  function getPresentation(presentationToken) {
+    var base = window.ICAC_CONFIG.publicPresentationApiUrl;
+    var url = base + "?session=" + encodeURIComponent(presentationToken);
+
+    return fetchWithTimeout(url, { method: "GET", headers: { Accept: "application/json" } })
+      .then(function (response) {
+        return response
+          .json()
+          .catch(function () {
+            return null;
+          })
+          .then(function (body) {
+            if (!body || typeof body.success !== "boolean") {
+              return normalizeError(
+                "INVALID_RESPONSE",
+                "No pudimos leer la respuesta del servidor. Intenta de nuevo más tarde."
+              );
+            }
+            return body;
+          });
+      })
+      .catch(function (err) {
+        debugLog("getPresentation() error:", err && err.message);
+        return normalizeError(
+          "NETWORK_ERROR",
+          "No pudimos conectar con el servidor. Verifica tu conexión a internet e intenta de nuevo."
+        );
+      });
+  }
+
+  /**
+   * Persiste el tema actual y/o el estatus de la presentación para que el
+   * capacitador pueda recargar la página sin perder el avance. No guarda
+   * progreso académico ni datos de colaboradores.
+   * POST {updatePresentationApiUrl}  (application/json)
+   */
+  function updatePresentation(presentationToken, currentTopic, status) {
+    var url = window.ICAC_CONFIG.updatePresentationApiUrl;
+    var payload = { session: presentationToken };
+    if (currentTopic !== undefined && currentTopic !== null) payload.currentTopic = currentTopic;
+    if (status !== undefined && status !== null) payload.status = status;
+
+    return fetchWithTimeout(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload)
+    })
+      .then(function (response) {
+        return response
+          .json()
+          .catch(function () {
+            return null;
+          })
+          .then(function (body) {
+            if (!body || typeof body.success !== "boolean") {
+              return normalizeError(
+                "INVALID_RESPONSE",
+                "No pudimos leer la respuesta del servidor. Intenta de nuevo más tarde."
+              );
+            }
+            return body;
+          });
+      })
+      .catch(function (err) {
+        debugLog("updatePresentation() error:", err && err.message);
+        return normalizeError(
+          "NETWORK_ERROR",
+          "No pudimos conectar con el servidor. Verifica tu conexión a internet e intenta de nuevo."
+        );
+      });
+  }
+
   window.ICAC_API = {
     getSession: getSession,
     registerParticipant: registerParticipant,
     getEvaluation: getEvaluation,
     startAttempt: startAttempt,
     submitAnswers: submitAnswers,
-    getResult: getResult
+    getResult: getResult,
+    getCertificate: getCertificate,
+    getCertificatesByParticipant: getCertificatesByParticipant,
+    buildCertificateDownloadUrl: buildCertificateDownloadUrl,
+    getPresentation: getPresentation,
+    updatePresentation: updatePresentation
   };
 })();
