@@ -1,735 +1,211 @@
-/**
- * ICAC - Modo presentación presencial para capacitadores.
- *
- * Página EXCLUSIVA para capacitadores. Se proyecta en una pantalla durante
- * la sesión presencial; los colaboradores NO tienen acceso a este módulo.
- * Todo el control es manual: el capacitador navega los temas, reproduce los
- * videos y muestra los QR con el mouse, el teclado o el panel de control.
- *
- * No registra progreso individual de colaboradores. Solo persiste, de forma
- * opcional, el tema actual y el estatus de la presentación (para poder
- * recargar la página sin perder el avance), mediante
- * ICAC_API.updatePresentation().
- */
 (function () {
   "use strict";
 
-  var els = {};
-  var state = {
-    token: null,
-    data: null,
-    topics: [], // 4 temas de contenido + registro + evaluacion + cierre, en orden
-    currentTopicId: null, // null => pantalla de inicio
-    status: "No iniciada"
-  };
-
-  var FIXED_TRAILING_TOPICS = [
-    { id: "registro", kind: "registro", title: "Registro o asistencia" },
-    { id: "evaluacion", kind: "evaluacion", title: "Evaluación" },
-    { id: "cierre", kind: "cierre", title: "Cierre" }
+  var state = { token: "", data: null, topics: [], currentId: null, status: "No iniciada", navOpen: true, currentVideo: null };
+  var el = {};
+  var fixed = [
+    { id: "registro", kind: "registro", section: "Operación", title: "Registro" },
+    { id: "evaluacion", kind: "evaluacion", section: "Operación", title: "Evaluación" },
+    { id: "cierre", kind: "cierre", section: "Cierre", title: "Cierre" }
   ];
 
   document.addEventListener("DOMContentLoaded", init);
 
   function init() {
-    cacheEls();
-    bindStaticEvents();
-
-    var params = new URLSearchParams(window.location.search);
-    state.token = (params.get("session") || "").trim();
-
-    if (!state.token) {
-      return showError(
-        "Token inválido",
-        "Falta el acceso de presentación en la liga. Verifica que la URL incluya ?session=... proporcionada para esta sesión."
-      );
-    }
-
-    loadPresentation();
+    cache();
+    bind();
+    state.token = (new URLSearchParams(location.search).get("session") || "").trim();
+    if (!state.token) return showError("Acceso incompleto", "La liga no contiene el token de presentación de la sesión.");
+    load();
   }
 
-  function cacheEls() {
-    els.stateLoading = document.getElementById("state-loading");
-    els.stateError = document.getElementById("state-error");
-    els.errorTitle = document.getElementById("error-title");
-    els.errorMessage = document.getElementById("error-message");
-    els.presentation = document.getElementById("presentation");
-
-    els.tbCourse = document.getElementById("tb-course");
-    els.tbTrainer = document.getElementById("tb-trainer");
-    els.tbFolio = document.getElementById("tb-folio");
-    els.tbTopicIndicator = document.getElementById("tb-topic-indicator");
-    els.btnExitFullscreen = document.getElementById("btn-exit-fullscreen");
-
-    els.navList = document.getElementById("nav-list");
-
-    els.screenInicio = document.getElementById("screen-inicio");
-    els.screenTema = document.getElementById("screen-tema");
-    els.screenRegistro = document.getElementById("screen-registro");
-    els.screenEvaluacion = document.getElementById("screen-evaluacion");
-    els.screenCierre = document.getElementById("screen-cierre");
-
-    els.startCourse = document.getElementById("start-course");
-    els.startTrainer = document.getElementById("start-trainer");
-    els.startDate = document.getElementById("start-date");
-    els.startLocation = document.getElementById("start-location");
-    els.startDuration = document.getElementById("start-duration");
-    els.btnStart = document.getElementById("btn-start");
-    els.btnShowQrFromStart = document.getElementById("btn-show-qr-from-start");
-
-    els.topicEyebrow = document.getElementById("topic-eyebrow");
-    els.topicTitle = document.getElementById("topic-title");
-    els.topicSubtitle = document.getElementById("topic-subtitle");
-    els.topicVideoWrap = document.getElementById("topic-video-wrap");
-    els.topicVideo = document.getElementById("topic-video");
-    els.topicVideoUnavailable = document.getElementById("topic-video-unavailable");
-    els.topicKeyMessage = document.getElementById("topic-key-message");
-    els.topicExtra = document.getElementById("topic-extra");
-    els.topicSupportText = document.getElementById("topic-support-text");
-    els.btnPrev = document.getElementById("btn-prev");
-    els.btnNext = document.getElementById("btn-next");
-    els.btnRestartVideo = document.getElementById("btn-restart-video");
-
-    els.qrRegistroBox = document.getElementById("qr-registro-box");
-    els.qrRegistroImg = document.getElementById("qr-registro-img");
-    els.qrRegistroPlaceholder = document.getElementById("qr-registro-placeholder");
-    els.registroFolio = document.getElementById("registro-folio");
-    els.registroCourse = document.getElementById("registro-course");
-    els.registroStatus = document.getElementById("registro-status");
-    els.attendeeTotal = document.getElementById("attendee-total");
-    els.attendeeCapacity = document.getElementById("attendee-capacity");
-    els.attendeeUpdated = document.getElementById("attendee-updated");
-    els.btnRefreshCount = document.getElementById("btn-refresh-count");
-
-    els.evalQrBox = document.getElementById("eval-qr-box");
-    els.evalQrImg = document.getElementById("eval-qr-img");
-    els.evalUnavailable = document.getElementById("eval-unavailable");
-    els.evalTime = document.getElementById("eval-time");
-    els.evalMinScore = document.getElementById("eval-min-score");
-    els.evalMaxAttempts = document.getElementById("eval-max-attempts");
-
-    els.btnShowEvalFromClose = document.getElementById("btn-show-eval-from-close");
-    els.btnEndPresentation = document.getElementById("btn-end-presentation");
-
-    els.controlPanel = document.getElementById("cap-control-panel");
+  function cache() {
+    ["state-loading","state-error","error-title","error-message","presentation","tb-course","tb-trainer","tb-folio","tb-topic-indicator","progress-text","progress-bar","btn-exit-fullscreen","btn-nav-toggle","btn-nav-close","cap-nav","nav-list","cap-main","screen-inicio","screen-tema","screen-registro","screen-evaluacion","screen-cierre","start-course","start-trainer","start-date","start-location","start-duration","btn-start","btn-show-qr-from-start","topic-stage","topic-context-actions","registro-status","registro-folio","registro-course","attendee-total","attendee-capacity","attendee-updated","btn-refresh-count","qr-registro-box","qr-registro-img","qr-registro-placeholder","eval-qr-box","eval-qr-img","eval-unavailable","eval-time","eval-min-score","eval-max-attempts","btn-show-eval-from-close","btn-end-presentation","cierre-contacto","cap-control-panel","video-modal","video-modal-title","video-modal-frame","btn-restart-video"].forEach(function(id){ el[id.replace(/-([a-z])/g,function(_,c){return c.toUpperCase();})]=document.getElementById(id); });
   }
 
-  function bindStaticEvents() {
-    els.btnStart.addEventListener("click", function () {
-      setStatus("En presentación");
-      goToFirstContentTopic();
+  function bind() {
+    el.btnStart.addEventListener("click", function(){ setStatus("En presentación"); firstContent(); });
+    el.btnShowQrFromStart.addEventListener("click", function(){ go("registro"); });
+    el.btnRefreshCount.addEventListener("click", refreshCount);
+    el.btnShowEvalFromClose.addEventListener("click", function(){ go("evaluacion"); });
+    el.btnEndPresentation.addEventListener("click", function(){ setStatus("Finalizada"); toast("Presentación finalizada"); });
+    el.btnNavToggle.addEventListener("click", toggleNav);
+    el.btnNavClose.addEventListener("click", toggleNav);
+    el.btnExitFullscreen.addEventListener("click", exitFullscreen);
+    el.capControlPanel.addEventListener("click", function(e){ var b=e.target.closest("[data-action]"); if(b) action(b.dataset.action); });
+    document.addEventListener("click", function(e){
+      var jump=e.target.closest("[data-jump]"); if(jump) go(jump.dataset.jump);
+      if(e.target.closest("[data-close-video]")) closeVideo();
+      var open=e.target.closest("[data-open-video]"); if(open) openVideo(open.dataset.openVideo);
     });
-    els.btnShowQrFromStart.addEventListener("click", function () {
-      goToTopic("registro");
-    });
-    els.btnPrev.addEventListener("click", goToPreviousTopic);
-    els.btnNext.addEventListener("click", goToNextTopic);
-    els.btnRestartVideo.addEventListener("click", restartVideo);
-    els.btnRefreshCount.addEventListener("click", refreshAttendeeCount);
-    els.btnShowEvalFromClose.addEventListener("click", function () {
-      goToTopic("evaluacion");
-    });
-    els.btnEndPresentation.addEventListener("click", function () {
-      setStatus("Finalizada");
-    });
-    els.btnExitFullscreen.addEventListener("click", exitFullscreen);
-
-    els.controlPanel.addEventListener("click", function (ev) {
-      var btn = ev.target.closest("[data-action]");
-      if (!btn) return;
-      handleControlAction(btn.getAttribute("data-action"));
-    });
-
-    document.addEventListener("keydown", handleKeydown);
-    document.addEventListener("fullscreenchange", updateFullscreenUi);
+    el.btnRestartVideo.addEventListener("click", restartVideo);
+    document.addEventListener("keydown", keys);
+    document.addEventListener("fullscreenchange", fullscreenUi);
   }
 
-  function handleControlAction(action) {
-    switch (action) {
-      case "inicio":
-        goToTopic(null);
-        break;
-      case "prev":
-        goToPreviousTopic();
-        break;
-      case "next":
-        goToNextTopic();
-        break;
-      case "show-video":
-        goToFirstVideoTopic();
-        break;
-      case "restart-video":
-        restartVideo();
-        break;
-      case "show-registro":
-        goToTopic("registro");
-        break;
-      case "show-evaluacion":
-        goToTopic("evaluacion");
-        break;
-      case "show-cierre":
-        goToTopic("cierre");
-        setStatus("Finalizada");
-        break;
-      case "fullscreen":
-        toggleFullscreen();
-        break;
-      case "salir":
-        exitFullscreen();
-        break;
-    }
+  function load() {
+    ICAC_API.getPresentation(state.token).then(function(resp){
+      if(!resp || !resp.success) return loadError(resp || {});
+      state.data=resp.data || {};
+      var contents=(state.data.contents || []).slice().sort(function(a,b){return (+a.order||0)-(+b.order||0);});
+      if(!contents.length) return showError("Curso sin contenidos", "No hay contenidos activos configurados para esta capacitación.");
+      state.topics=contents.map(normalize).concat(fixed);
+      state.status=(state.data.session && state.data.session.presentationStatus)||"No iniciada";
+      el.stateLoading.hidden=true; el.presentation.hidden=false;
+      renderTop(); renderNav(); renderStart();
+      var saved=state.data.session && state.data.session.currentTopic;
+      go(saved && find(saved) ? saved : null, false);
+    }).catch(function(){ showError("Error de conexión", "No fue posible consultar la presentación. Verifica la conexión y que el workflow esté activo."); });
   }
 
-  function handleKeydown(ev) {
-    if (els.presentation.hasAttribute("hidden")) return; // aún no cargó
-    if (ev.key === "ArrowRight") {
-      goToNextTopic();
-    } else if (ev.key === "ArrowLeft") {
-      goToPreviousTopic();
-    } else if (ev.key === "f" || ev.key === "F") {
-      toggleFullscreen();
-    } else if (ev.key === "Escape") {
-      exitFullscreen();
-    }
-  }
-
-  // ---------------------------------------------------------------------
-  // Carga de datos
-  // ---------------------------------------------------------------------
-
-  function loadPresentation() {
-    ICAC_API.getPresentation(state.token).then(function (resp) {
-      if (!resp.success) {
-        return handleLoadError(resp);
-      }
-      state.data = resp.data;
-
-      if (resp.code === "COURSE_WITHOUT_CONTENT" || !resp.data.contents || resp.data.contents.length === 0) {
-        return showError(
-          "Curso sin contenidos",
-          "Esta sesión no tiene contenidos activos configurados para capacitación presencial. Verifica el curso en Airtable."
-        );
-      }
-
-      state.topics = resp.data.contents
-        .slice()
-        .sort(function (a, b) {
-          return (a.order || 0) - (b.order || 0);
-        })
-        .map(function (c) {
-          return {
-            id: c.contentId,
-            kind: "contenido",
-            section: c.section,
-            type: c.type,
-            title: c.title,
-            subtitle: c.subtitle,
-            keyMessage: c.keyMessage,
-            description: c.description,
-            supportText: c.supportText,
-            embedUrl: c.embedUrl,
-            duration: c.duration,
-            contactEmail: c.contactEmail,
-            contactPhone: c.contactPhone
-          };
-        })
-        .concat(FIXED_TRAILING_TOPICS);
-
-      state.status = (resp.data.session && resp.data.session.presentationStatus) || "No iniciada";
-
-      showPresentation();
-      renderTopbar();
-      renderNav();
-
-      var savedTopic = resp.data.session && resp.data.session.currentTopic;
-      if (savedTopic && findTopic(savedTopic)) {
-        goToTopic(savedTopic, { persist: false });
-      } else {
-        goToTopic(null, { persist: false });
-      }
-    });
-  }
-
-  function handleLoadError(resp) {
-    var code = resp.code || "TECHNICAL_ERROR";
-    var map = {
-      INVALID_TOKEN: ["Token inválido", "El acceso de presentación en la liga tiene un formato inválido."],
-      TOKEN_INVALID: ["Sesión no encontrada", "No encontramos ninguna sesión asociada a este acceso de presentación."],
-      PRESENTATION_DISABLED: ["Presentación deshabilitada", "El acceso de presentación de esta sesión está deshabilitado. Solicita al administrador que lo habilite en Airtable."],
-      SESSION_CANCELLED: ["Sesión cancelada", "Esta sesión de capacitación fue cancelada."],
-      SESSION_WITHOUT_COURSE: ["Curso sin contenidos", "La sesión no tiene un curso vinculado correctamente."],
-      NETWORK_ERROR: ["Error de conexión", "No pudimos conectar con el servidor. Verifica tu conexión a internet e intenta de nuevo."],
-      INVALID_RESPONSE: ["Error de conexión", "No pudimos leer la respuesta del servidor. Intenta de nuevo más tarde."]
+  function normalize(c){
+    return {
+      id:c.contentId, kind:"contenido", order:+c.order||0, section:c.section||"Contenido", type:c.type||"Texto",
+      title:c.title||"Contenido", subtitle:c.subtitle||"", keyMessage:c.keyMessage||"", description:c.description||"",
+      supportText:c.supportText||"", embedUrl:c.embedUrl||"", duration:c.duration||"", contactEmail:c.contactEmail||"", contactPhone:c.contactPhone||""
     };
-    var entry = map[code] || ["Acceso no autorizado", resp.message || "No fue posible cargar la presentación."];
-    showError(entry[0], entry[1]);
   }
 
-  function showError(title, message) {
-    els.stateLoading.hidden = true;
-    els.errorTitle.textContent = title;
-    els.errorMessage.textContent = message;
-    els.stateError.hidden = false;
+  function loadError(r){
+    var m={INVALID_TOKEN:["Token inválido","La liga de presentación no tiene un formato válido."],TOKEN_INVALID:["Sesión no encontrada","No existe una presentación asociada a este acceso."],PRESENTATION_DISABLED:["Presentación deshabilitada","Habilita el acceso de presentación desde Airtable."],SESSION_CANCELLED:["Sesión cancelada","Esta sesión fue cancelada."],COURSE_WITHOUT_CONTENT:["Curso sin contenidos","No hay contenidos activos para esta sesión."]};
+    var x=m[r.code]||["No se pudo cargar","El backend devolvió un error. Revisa el workflow de consulta de presentación."];
+    showError(x[0],x[1]);
   }
 
-  function showPresentation() {
-    els.stateLoading.hidden = true;
-    els.stateError.hidden = true;
-    els.presentation.hidden = false;
+  function showError(t,m){ el.stateLoading.hidden=true; el.presentation.hidden=true; el.stateError.hidden=false; el.errorTitle.textContent=t; el.errorMessage.textContent=m; }
+
+  function renderTop(){
+    var s=state.data.session||{}, c=state.data.course||{}, tr=state.data.trainer||{};
+    el.tbCourse.textContent=c.name||"Capacitación";
+    el.tbTrainer.textContent=tr.name||s.trainer||"";
+    el.tbFolio.textContent=s.folio||"";
   }
 
-  // ---------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------
-
-  function renderTopbar() {
-    var d = state.data;
-    els.tbCourse.textContent = (d.course && d.course.name) || "Curso";
-    els.tbTrainer.textContent = (d.trainer && d.trainer.name) ? "Capacitador: " + d.trainer.name : "";
-    els.tbFolio.textContent = (d.session && d.session.folio) ? "Folio: " + d.session.folio : "";
+  function renderStart(){
+    var s=state.data.session||{}, c=state.data.course||{}, tr=state.data.trainer||{};
+    el.startCourse.textContent=c.name||"Código de Ética y Compliance";
+    el.startTrainer.textContent=tr.name||s.trainer||"Por confirmar";
+    el.startDate.textContent=formatDate(s.startDate||s.start);
+    el.startLocation.textContent=s.location||s.modality||"Por confirmar";
+    el.startDuration.textContent=c.duration||s.duration||"Según agenda";
   }
 
-  function renderNav() {
-    els.navList.innerHTML = "";
-    var lastSection = null;
-    state.topics.forEach(function (topic, idx) {
-      var sectionLabel = topic.section || (topic.kind !== "contenido" ? "Cierre del programa" : null);
-      if (sectionLabel && sectionLabel !== lastSection) {
-        var header = document.createElement("li");
-        header.className = "cap-nav__section";
-        header.textContent = sectionLabel;
-        els.navList.appendChild(header);
-        lastSection = sectionLabel;
-      }
-      var li = document.createElement("li");
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "cap-nav__item";
-      btn.setAttribute("data-topic-id", topic.id);
-      btn.innerHTML =
-        '<span class="cap-nav__num">' + (idx + 1) + "</span><span>" + escapeHtml(topic.title) + "</span>";
-      btn.addEventListener("click", function () {
-        goToTopic(topic.id);
+  function renderNav(){
+    el.navList.innerHTML="";
+    var groups={};
+    state.topics.forEach(function(t){ (groups[t.section]||(groups[t.section]=[])).push(t); });
+    Object.keys(groups).forEach(function(section,gi){
+      var wrap=document.createElement("section"); wrap.className="cap-nav-group";
+      var h=document.createElement("button"); h.type="button"; h.className="cap-nav-group__title"; h.innerHTML="<span>"+esc(section)+"</span><span>⌄</span>";
+      var list=document.createElement("div"); list.className="cap-nav-group__items";
+      groups[section].forEach(function(t){
+        var b=document.createElement("button"); b.type="button"; b.className="cap-nav-item"; b.dataset.topic=t.id;
+        b.innerHTML='<span class="cap-nav-item__dot"></span><span>'+esc(t.title)+'</span>';
+        b.addEventListener("click",function(){go(t.id); if(innerWidth<1000) toggleNav(false);});
+        list.appendChild(b);
       });
-      li.appendChild(btn);
-      els.navList.appendChild(li);
-    });
-    updateNavHighlight();
-  }
-
-  function updateNavHighlight() {
-    var buttons = els.navList.querySelectorAll(".cap-nav__item");
-    buttons.forEach(function (btn) {
-      var isActive = btn.getAttribute("data-topic-id") === state.currentTopicId;
-      btn.setAttribute("aria-current", isActive ? "true" : "false");
+      h.addEventListener("click",function(){ wrap.classList.toggle("is-collapsed"); });
+      wrap.appendChild(h); wrap.appendChild(list); el.navList.appendChild(wrap);
     });
   }
 
-  function renderStartScreen() {
-    var d = state.data;
-    els.startCourse.textContent = (d.course && d.course.name) || "Código de Ética y Compliance";
-    els.startTrainer.textContent = (d.trainer && d.trainer.name) || "Por asignar";
-    els.startDate.textContent = formatDate(d.session && d.session.date);
-    els.startLocation.textContent = (d.session && d.session.location) || "Por confirmar";
-    var hrs = d.course && d.course.estimatedDurationHours;
-    els.startDuration.textContent = hrs ? hrs + " hrs" : "Por confirmar";
-  }
-
-  function renderTopicScreen(topic) {
-    els.topicEyebrow.textContent =
-      (topic.section ? topic.section + " · " : "") + "Tema " + (indexOfTopic(topic.id) + 1) + " de " + state.topics.length;
-    els.topicTitle.textContent = topic.title || "";
-    els.topicSubtitle.textContent = topic.subtitle || "";
-
-    // Para "Indicador" de una sola cifra (ej. 48 h), el mensaje clave YA es la
-    // cifra grande: se muestra como estadística en topic-extra en vez de
-    // repetirse en el cap-key-message genérico.
-    var isSingleStat = topic.type === "Indicador" && topic.description && topic.description.indexOf("|") === -1;
-    els.topicKeyMessage.hidden = !!isSingleStat;
-    els.topicKeyMessage.textContent = isSingleStat ? "" : topic.keyMessage || "";
-
-    els.topicSupportText.textContent = topic.supportText || "";
-    els.topicExtra.innerHTML = "";
-    renderTopicExtra(topic);
-
-    if (topic.embedUrl) {
-      els.topicVideo.src = topic.embedUrl;
-      els.topicVideoWrap.hidden = false;
-      els.topicVideoUnavailable.hidden = true;
-    } else {
-      els.topicVideo.src = "";
-      els.topicVideoWrap.hidden = true;
-      els.topicVideoUnavailable.hidden = true; // solo "Principio ético" espera video; el resto no lo anuncia como faltante
+  function go(id,persist){
+    state.currentId=id||null;
+    [el.screenInicio,el.screenTema,el.screenRegistro,el.screenEvaluacion,el.screenCierre].forEach(function(x){x.hidden=true;});
+    if(!id){ renderStart(); el.screenInicio.hidden=false; el.tbTopicIndicator.textContent="Inicio"; }
+    else {
+      var t=find(id); if(!t) return;
+      el.tbTopicIndicator.textContent=t.title;
+      if(t.kind==="contenido"){ renderTopic(t); el.screenTema.hidden=false; }
+      if(t.kind==="registro"){ renderRegistro(); el.screenRegistro.hidden=false; }
+      if(t.kind==="evaluacion"){ renderEvaluacion(); el.screenEvaluacion.hidden=false; }
+      if(t.kind==="cierre"){ el.screenCierre.hidden=false; }
     }
-
-    els.btnPrev.disabled = indexOfTopic(topic.id) === 0;
-    els.btnNext.disabled = indexOfTopic(topic.id) === state.topics.length - 1;
+    updateNav(); updateProgress(); animateScreen();
+    if(persist!==false) persistState(id,state.status);
   }
 
-  /**
-   * Renderiza el bloque de contenido según el "Tipo de contenido" de Airtable:
-   * Tarjetas -> grid de tarjetas; Diagrama -> nodos + párrafo; Indicador ->
-   * cifra(s) grande(s); Canal de denuncia -> correo/teléfono destacados;
-   * Compromiso -> bloque de compromiso; el resto (Texto/Introducción/
-   * Principio ético) cae en el párrafo genérico ya cubierto por
-   * topic-support-text, así que aquí solo se agrega la Descripción como
-   * párrafo adicional cuando aplica.
-   */
-  function renderTopicExtra(topic) {
-    var desc = topic.description || "";
-    var container = els.topicExtra;
-
-    if (topic.type === "Tarjetas") {
-      var grid = document.createElement("div");
-      grid.className = "cap-cards-grid";
-      desc.split("\n").filter(Boolean).forEach(function (line) {
-        var idx = line.indexOf(":");
-        var card = document.createElement("div");
-        card.className = "cap-card";
-        if (idx > -1 && idx < 40) {
-          card.innerHTML =
-            '<p class="cap-card__title">' + escapeHtml(line.slice(0, idx)) + "</p>" +
-            '<p class="cap-card__body">' + escapeHtml(line.slice(idx + 1).trim()) + "</p>";
-        } else {
-          card.innerHTML = '<p class="cap-card__body">' + escapeHtml(line) + "</p>";
-        }
-        grid.appendChild(card);
-      });
-      container.appendChild(grid);
-      return;
-    }
-
-    if (topic.type === "Diagrama") {
-      var parts = desc.split("\n—\n");
-      var nodeLines = (parts[0] || "").split("\n").filter(Boolean);
-      var paragraph = parts.slice(1).join("\n—\n");
-      if (nodeLines.length) {
-        var nodes = document.createElement("div");
-        nodes.className = "cap-diagram-nodes";
-        nodeLines.forEach(function (n) {
-          var node = document.createElement("div");
-          node.className = "cap-diagram-node";
-          node.textContent = n;
-          nodes.appendChild(node);
-        });
-        container.appendChild(nodes);
-      }
-      if (paragraph) {
-        var p = document.createElement("p");
-        p.className = "cap-support-text";
-        p.style.maxWidth = "820px";
-        p.textContent = paragraph;
-        container.appendChild(p);
-      }
-      return;
-    }
-
-    if (topic.type === "Indicador") {
-      var lines = desc.split("\n").filter(Boolean);
-      var row = document.createElement("div");
-      row.className = "cap-stats-row";
-      if (lines.length && lines[0].indexOf("|") > -1) {
-        lines.forEach(function (line) {
-          var bits = line.split("|");
-          var stat = document.createElement("div");
-          stat.className = "cap-stat";
-          stat.innerHTML =
-            '<p class="cap-stat__num">' + escapeHtml(bits[0] || "") + "</p>" +
-            '<p class="cap-stat__label">' + escapeHtml(bits[1] || "") + "</p>" +
-            '<p class="cap-stat__detail">' + escapeHtml(bits[2] || "") + "</p>";
-          row.appendChild(stat);
-        });
-      } else {
-        // Cifra única: el número grande viene en Mensaje clave.
-        var stat2 = document.createElement("div");
-        stat2.className = "cap-stat";
-        stat2.innerHTML =
-          '<p class="cap-stat__num">' + escapeHtml(topic.keyMessage || "") + "</p>" +
-          '<p class="cap-stat__label">' + escapeHtml(desc) + "</p>";
-        row.appendChild(stat2);
-      }
-      container.appendChild(row);
-      return;
-    }
-
-    if (topic.type === "Canal de denuncia") {
-      if (desc) {
-        var p2 = document.createElement("p");
-        p2.className = "cap-support-text";
-        p2.style.maxWidth = "820px";
-        p2.textContent = desc;
-        container.appendChild(p2);
-      }
-      if (topic.contactEmail || topic.contactPhone) {
-        var cgrid = document.createElement("div");
-        cgrid.className = "cap-contact-grid";
-        if (topic.contactEmail) {
-          var box1 = document.createElement("div");
-          box1.className = "cap-contact-box";
-          box1.innerHTML =
-            '<p class="cap-contact-box__label">Correo electrónico</p><p class="cap-contact-box__value">' +
-            escapeHtml(topic.contactEmail) + "</p>";
-          cgrid.appendChild(box1);
-        }
-        if (topic.contactPhone) {
-          var box2 = document.createElement("div");
-          box2.className = "cap-contact-box";
-          box2.innerHTML =
-            '<p class="cap-contact-box__label">Teléfono</p><p class="cap-contact-box__value">' +
-            escapeHtml(topic.contactPhone) + "</p>";
-          cgrid.appendChild(box2);
-        }
-        container.appendChild(cgrid);
-      }
-      return;
-    }
-
-    if (topic.type === "Compromiso") {
-      if (desc) {
-        var commit = document.createElement("div");
-        commit.className = "cap-commitment-box";
-        commit.textContent = desc;
-        container.appendChild(commit);
-      }
-      return;
-    }
-
-    // Texto / Introducción / Principio ético: la Descripción (si existe) se
-    // muestra como párrafo adicional bajo el mensaje clave.
-    if (desc) {
-      var pDefault = document.createElement("p");
-      pDefault.className = "cap-support-text";
-      pDefault.style.maxWidth = "820px";
-      pDefault.textContent = desc;
-      container.appendChild(pDefault);
-    }
+  function renderTopic(t){
+    var type=(t.type||"").toLowerCase(), title=(t.title||"").toLowerCase();
+    var html='';
+    if(type.indexOf("portada")>=0) html=hero(t);
+    else if(type.indexOf("tarjeta")>=0 || title.indexOf("fundamento")>=0) html=cards(t);
+    else if(type.indexOf("diagrama")>=0 || title.indexOf("alcance")>=0) html=diagram(t);
+    else if(type.indexOf("indicador")>=0 || /48|24|12|15|18/.test((t.keyMessage||"")+" "+(t.description||""))) html=stats(t);
+    else if(type.indexOf("canal")>=0 || title.indexOf("denuncia")>=0) html=whistle(t);
+    else if(type.indexOf("compromiso")>=0 || title.indexOf("compromiso")>=0) html=commitment(t);
+    else if(t.embedUrl) html=videoPrinciple(t);
+    else if(type.indexOf("principio")>=0 || title.indexOf("principio")>=0) html=principle(t);
+    else html=textScreen(t);
+    el.topicStage.innerHTML=html;
+    renderContextActions(t);
   }
 
-  function renderRegistroScreen() {
-    var s = state.data.session || {};
-    els.registroFolio.textContent = s.folio || "—";
-    els.registroCourse.textContent = (state.data.course && state.data.course.name) || "—";
+  function baseHead(t){ return '<p class="cap-eyebrow">'+esc(t.section)+'</p><h1 class="cap-title">'+esc(t.title)+'</h1>'+(t.subtitle?'<p class="cap-lead">'+esc(t.subtitle)+'</p>':''); }
+  function allText(t){ return [t.keyMessage,t.description,t.supportText].filter(Boolean); }
+  function paragraphs(t){ return allText(t).map(function(x){return '<p>'+esc(x)+'</p>';}).join(''); }
+  function splitLines(t){ return (t.description||t.supportText||t.keyMessage||"").split(/\n|\||;/).map(function(x){return x.trim();}).filter(Boolean); }
 
-    if (s.qrUrl) {
-      els.qrRegistroImg.src = s.qrUrl;
-      els.qrRegistroBox.hidden = false;
-      els.qrRegistroPlaceholder.hidden = true;
-    } else {
-      els.qrRegistroBox.hidden = true;
-      els.qrRegistroPlaceholder.hidden = false;
-    }
+  function hero(t){ return '<article class="cap-content cap-content--hero">'+baseHead(t)+'<div class="cap-highlight">'+esc(t.keyMessage||t.description||"")+'</div>'+(t.supportText?'<p class="cap-lead">'+esc(t.supportText)+'</p>':'')+'</article>'; }
+  function cards(t){ var items=splitLines(t); if(items.length<2) items=allText(t); return '<article class="cap-content">'+baseHead(t)+'<div class="cap-card-grid">'+items.map(function(x,i){var p=x.split(":"); return '<div class="cap-card cap-stagger" style="--i:'+i+'"><span class="cap-card__index">'+String(i+1).padStart(2,"0")+'</span><h3>'+esc(p[0])+'</h3><p>'+esc(p.slice(1).join(":")||x)+'</p></div>';}).join('')+'</div></article>'; }
+  function diagram(t){ var items=splitLines(t); return '<article class="cap-content">'+baseHead(t)+'<div class="cap-diagram"><div class="cap-diagram__center">Código de Ética</div>'+items.map(function(x,i){return '<div class="cap-diagram__node cap-stagger" style="--i:'+i+'">'+esc(x)+'</div>';}).join('')+'</div>'+(t.supportText?'<p class="cap-body-copy">'+esc(t.supportText)+'</p>':'')+'</article>'; }
+  function stats(t){ var items=splitLines(t); if(items.length<2) items=allText(t); return '<article class="cap-content">'+baseHead(t)+'<div class="cap-stat-grid">'+items.map(function(x,i){var m=x.match(/(<\s*)?(\d+)\s*(horas?|años?|h)?/i); var num=m?m[2]:String(i+1); var label=x.replace(m?m[0]:"","").replace(/^[:\-–]\s*/,""); return '<div class="cap-stat-card cap-stagger" style="--i:'+i+'"><strong data-count="'+esc(num)+'">'+esc(num)+'</strong><span>'+esc((m&&m[3]?m[3]+" ":"")+label)+'</span></div>';}).join('')+'</div></article>'; }
+  function principle(t){ return '<article class="cap-content cap-principle">'+baseHead(t)+'<div class="cap-principle__number">'+esc(extractNumber(t.title))+'</div><div class="cap-principle__copy">'+paragraphs(t)+'</div></article>'; }
+  function videoPrinciple(t){ return '<article class="cap-content cap-video-principle">'+baseHead(t)+'<div class="cap-video-principle__grid"><div><div class="cap-principle__copy">'+paragraphs(t)+'</div></div><button class="cap-video-poster" type="button" data-open-video="'+esc(t.id)+'"><span class="cap-play">▶</span><strong>Reproducir recurso audiovisual</strong><small>'+esc(t.duration||"Video de apoyo")+'</small></button></div></article>'; }
+  function whistle(t){ return '<article class="cap-content cap-whistle">'+baseHead(t)+'<div class="cap-whistle__shield">Confidencial<br>y sin represalias</div><div class="cap-contact-grid">'+(t.contactEmail?'<div><span>Correo electrónico</span><strong>'+esc(t.contactEmail)+'</strong></div>':'')+(t.contactPhone?'<div><span>Teléfono</span><strong>'+esc(t.contactPhone)+'</strong></div>':'')+'</div><div class="cap-body-copy">'+paragraphs(t)+'</div></article>'; }
+  function commitment(t){ return '<article class="cap-content cap-commitment">'+baseHead(t)+'<blockquote>'+esc(t.keyMessage||t.description||"")+'</blockquote>'+(t.supportText?'<p class="cap-body-copy">'+esc(t.supportText)+'</p>':'')+'<div class="cap-signature-lines"><span>Nombre y firma</span><span>Cargo u organización</span></div></article>'; }
+  function textScreen(t){ return '<article class="cap-content cap-text-screen">'+baseHead(t)+(t.keyMessage?'<div class="cap-highlight">'+esc(t.keyMessage)+'</div>':'')+'<div class="cap-body-copy">'+[t.description,t.supportText].filter(Boolean).map(function(x){return '<p>'+esc(x)+'</p>';}).join('')+'</div></article>'; }
 
-    setStatusPill(els.registroStatus, s.registrationOpen, "Registro abierto", "Registro cerrado");
-    updateAttendeeCount();
+  function renderContextActions(t){
+    var a='<button class="cap-btn cap-btn--ghost" data-topic-action="prev" type="button">← Anterior</button>';
+    if(t.embedUrl) a+='<button class="cap-btn cap-btn--secondary" data-open-video="'+esc(t.id)+'" type="button">Reproducir video</button>';
+    a+='<button class="cap-btn cap-btn--primary" data-topic-action="next" type="button">Siguiente →</button>';
+    el.topicContextActions.innerHTML=a;
+    el.topicContextActions.querySelector('[data-topic-action="prev"]').onclick=prev;
+    el.topicContextActions.querySelector('[data-topic-action="next"]').onclick=next;
   }
 
-  function updateAttendeeCount() {
-    var s = state.data.session || {};
-    els.attendeeTotal.textContent = s.totalRegistered != null ? String(s.totalRegistered) : "—";
-    els.attendeeCapacity.textContent = s.capacity != null ? String(s.capacity) : "Sin límite";
-    els.attendeeUpdated.textContent = new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+  function renderRegistro(){
+    var s=state.data.session||{}, c=state.data.course||{};
+    el.registroFolio.textContent=s.folio||"—"; el.registroCourse.textContent=c.name||"—";
+    setPill(!!s.registrationOpen);
+    if(s.qrUrl){el.qrRegistroImg.src=s.qrUrl;el.qrRegistroBox.hidden=false;el.qrRegistroPlaceholder.hidden=true;}else{el.qrRegistroBox.hidden=true;el.qrRegistroPlaceholder.hidden=false;}
+    updateCount();
   }
-
-  function renderEvaluacionScreen() {
-    var s = state.data.session || {};
-    var ev = state.data.evaluation || {};
-
-    if (ev.available) {
-      if (s.qrUrl) {
-        els.evalQrImg.src = s.qrUrl;
-        els.evalQrBox.hidden = false;
-      } else {
-        els.evalQrBox.hidden = true;
-      }
-      els.evalUnavailable.hidden = true;
-    } else {
-      els.evalQrBox.hidden = true;
-      els.evalUnavailable.hidden = false;
-    }
-
-    els.evalMinScore.textContent = ev.minScore != null ? ev.minScore + "%" : "—";
-    els.evalMaxAttempts.textContent = ev.maxAttempts != null ? String(ev.maxAttempts) : "—";
-    els.evalTime.textContent = "Variable según el cuestionario";
+  function renderEvaluacion(){
+    var s=state.data.session||{}, e=state.data.evaluation||{};
+    if(e.available&&s.qrUrl){el.evalQrImg.src=s.qrUrl;el.evalQrBox.hidden=false;el.evalUnavailable.hidden=true;}else{el.evalQrBox.hidden=true;el.evalUnavailable.hidden=false;}
+    el.evalTime.textContent=e.duration||"Según cuestionario"; el.evalMinScore.textContent=e.minScore!=null?e.minScore+"%":"—"; el.evalMaxAttempts.textContent=e.maxAttempts!=null?e.maxAttempts:"—";
   }
+  function setPill(open){ el.registroStatus.textContent=open?"Registro abierto":"Registro cerrado"; el.registroStatus.className="cap-status-pill "+(open?"is-open":"is-closed"); }
+  function updateCount(){var s=state.data.session||{}; el.attendeeTotal.textContent=s.totalRegistered!=null?s.totalRegistered:"—";el.attendeeCapacity.textContent=s.capacity!=null?s.capacity:"Sin límite";el.attendeeUpdated.textContent=new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});}
+  function refreshCount(){el.btnRefreshCount.disabled=true;el.btnRefreshCount.textContent="Actualizando…";ICAC_API.getPresentation(state.token).then(function(r){if(r&&r.success){state.data.session=Object.assign(state.data.session||{},r.data.session||{});renderRegistro();toast("Conteo actualizado");}}).finally(function(){el.btnRefreshCount.disabled=false;el.btnRefreshCount.textContent="Actualizar conteo";});}
 
-  function setStatusPill(el, isOpen, openText, closedText) {
-    el.textContent = isOpen ? openText : closedText;
-    el.classList.toggle("cap-status-pill--open", !!isOpen);
-    el.classList.toggle("cap-status-pill--closed", !isOpen);
-  }
+  function openVideo(id){ var t=find(id); if(!t||!t.embedUrl)return; state.currentVideo=t; el.videoModalTitle.textContent=t.title; el.videoModalFrame.src=withAutoplay(t.embedUrl); el.videoModal.hidden=false; document.body.classList.add("modal-open"); }
+  function closeVideo(){el.videoModal.hidden=true;el.videoModalFrame.src="";state.currentVideo=null;document.body.classList.remove("modal-open");}
+  function restartVideo(){if(!state.currentVideo)return;el.videoModalFrame.src="";setTimeout(function(){el.videoModalFrame.src=withAutoplay(state.currentVideo.embedUrl);},40);}
+  function withAutoplay(u){return u+(u.indexOf("?")>=0?"&":"?")+"autoplay=1&rel=0&modestbranding=1";}
 
-  // ---------------------------------------------------------------------
-  // Navegación entre pantallas
-  // ---------------------------------------------------------------------
+  function action(a){ if(a==="inicio")go(null); if(a==="prev")prev(); if(a==="next")next(); if(a==="show-registro")go("registro"); if(a==="show-evaluacion")go("evaluacion"); if(a==="show-cierre")go("cierre"); if(a==="fullscreen")toggleFullscreen(); }
+  function keys(e){ if(el.presentation.hidden)return; if(!el.videoModal.hidden&&e.key==="Escape")return closeVideo(); if(e.key==="ArrowRight")next(); else if(e.key==="ArrowLeft")prev(); else if(e.key.toLowerCase()==="f")toggleFullscreen(); else if(e.key.toLowerCase()==="r")go("registro"); else if(e.key.toLowerCase()==="e")go("evaluacion"); else if(e.key==="Home")go(null); }
+  function firstContent(){var x=state.topics.find(function(t){return t.kind==="contenido";});if(x)go(x.id);}
+  function next(){if(state.currentId===null)return firstContent();var i=index(state.currentId);if(i>=0&&i<state.topics.length-1)go(state.topics[i+1].id);}
+  function prev(){if(state.currentId===null)return;var i=index(state.currentId);if(i<=0)go(null);else go(state.topics[i-1].id);}
+  function find(id){return state.topics.find(function(t){return t.id===id;});}
+  function index(id){return state.topics.findIndex(function(t){return t.id===id;});}
 
-  function findTopic(id) {
-    for (var i = 0; i < state.topics.length; i++) {
-      if (state.topics[i].id === id) return state.topics[i];
-    }
-    return null;
-  }
-
-  function indexOfTopic(id) {
-    for (var i = 0; i < state.topics.length; i++) {
-      if (state.topics[i].id === id) return i;
-    }
-    return -1;
-  }
-
-  function hideAllScreens() {
-    [els.screenInicio, els.screenTema, els.screenRegistro, els.screenEvaluacion, els.screenCierre].forEach(function (s) {
-      s.hidden = true;
-    });
-  }
-
-  function goToTopic(id, opts) {
-    opts = opts || {};
-    hideAllScreens();
-
-    if (!id) {
-      state.currentTopicId = null;
-      renderStartScreen();
-      els.screenInicio.hidden = false;
-      els.tbTopicIndicator.textContent = "Inicio";
-      updateNavHighlight();
-      if (opts.persist !== false) persistState(null, state.status);
-      return;
-    }
-
-    var topic = findTopic(id);
-    if (!topic) return;
-
-    state.currentTopicId = id;
-    updateNavHighlight();
-    els.tbTopicIndicator.textContent = topic.title;
-
-    if (topic.kind === "contenido") {
-      renderTopicScreen(topic);
-      els.screenTema.hidden = false;
-    } else if (topic.kind === "registro") {
-      renderRegistroScreen();
-      els.screenRegistro.hidden = false;
-    } else if (topic.kind === "evaluacion") {
-      renderEvaluacionScreen();
-      els.screenEvaluacion.hidden = false;
-    } else if (topic.kind === "cierre") {
-      els.screenCierre.hidden = false;
-    }
-
-    if (opts.persist !== false) persistState(id, state.status);
-  }
-
-  function goToFirstContentTopic() {
-    var first = state.topics.filter(function (t) {
-      return t.kind === "contenido";
-    })[0];
-    if (first) goToTopic(first.id);
-  }
-
-  function goToLastContentTopic() {
-    var lastId = state.currentTopicId;
-    var topic = findTopic(lastId);
-    if (topic && topic.kind === "contenido") return; // ya estamos en un tema de contenido
-    var contentTopics = state.topics.filter(function (t) {
-      return t.kind === "contenido";
-    });
-    if (contentTopics.length) goToTopic(contentTopics[0].id);
-  }
-
-  /**
-   * Botón "Mostrar video" del panel de control: salta al primero de los 4
-   * temas ("Principio ético") que tiene video asociado (Integridad,
-   * Competencia justa, Conflicto de interés, Información confidencial).
-   */
-  function goToFirstVideoTopic() {
-    var withVideo = state.topics.filter(function (t) {
-      return t.kind === "contenido" && t.embedUrl;
-    });
-    if (withVideo.length) goToTopic(withVideo[0].id);
-  }
-
-  function goToNextTopic() {
-    if (state.currentTopicId === null) return goToFirstContentTopic();
-    var idx = indexOfTopic(state.currentTopicId);
-    if (idx === -1 || idx >= state.topics.length - 1) return;
-    goToTopic(state.topics[idx + 1].id);
-  }
-
-  function goToPreviousTopic() {
-    if (state.currentTopicId === null) return;
-    var idx = indexOfTopic(state.currentTopicId);
-    if (idx <= 0) return goToTopic(null);
-    goToTopic(state.topics[idx - 1].id);
-  }
-
-  function restartVideo() {
-    var topic = findTopic(state.currentTopicId);
-    if (!topic || topic.kind !== "contenido" || !topic.embedUrl) return;
-    els.topicVideo.src = "";
-    // Reasignar en el siguiente ciclo de render fuerza a YouTube a reiniciar el video.
-    window.setTimeout(function () {
-      els.topicVideo.src = topic.embedUrl;
-    }, 30);
-  }
-
-  function refreshAttendeeCount() {
-    ICAC_API.getPresentation(state.token).then(function (resp) {
-      if (!resp.success || !resp.data) return;
-      state.data.session.totalRegistered = resp.data.session.totalRegistered;
-      state.data.session.capacity = resp.data.session.capacity;
-      state.data.session.registrationOpen = resp.data.session.registrationOpen;
-      state.data.session.qrUrl = resp.data.session.qrUrl;
-      if (state.currentTopicId === "registro") renderRegistroScreen();
-      else updateAttendeeCount();
-    });
-  }
-
-  function setStatus(newStatus) {
-    state.status = newStatus;
-    persistState(state.currentTopicId, newStatus);
-  }
-
-  function persistState(topicId, status) {
-    if (!state.token) return;
-    ICAC_API.updatePresentation(state.token, topicId, status);
-  }
-
-  // ---------------------------------------------------------------------
-  // Pantalla completa
-  // ---------------------------------------------------------------------
-
-  function toggleFullscreen() {
-    if (document.fullscreenElement) {
-      exitFullscreen();
-    } else if (els.presentation.requestFullscreen) {
-      els.presentation.requestFullscreen().catch(function () {});
-    }
-  }
-
-  function exitFullscreen() {
-    if (document.fullscreenElement && document.exitFullscreen) {
-      document.exitFullscreen().catch(function () {});
-    }
-  }
-
-  function updateFullscreenUi() {
-    els.btnExitFullscreen.hidden = !document.fullscreenElement;
-  }
-
-  // ---------------------------------------------------------------------
-  // Utilidades
-  // ---------------------------------------------------------------------
-
-  function formatDate(iso) {
-    if (!iso) return "Por confirmar";
-    var d = new Date(iso);
-    if (isNaN(d.getTime())) return "Por confirmar";
-    return d.toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" });
-  }
-
-  function escapeHtml(str) {
-    return String(str == null ? "" : str).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-    });
-  }
+  function updateNav(){document.querySelectorAll(".cap-nav-item").forEach(function(b){b.classList.toggle("is-active",b.dataset.topic===state.currentId);});}
+  function updateProgress(){var total=state.topics.length, current=state.currentId===null?0:index(state.currentId)+1;el.progressText.textContent=current+" / "+total;el.progressBar.style.width=(total?current/total*100:0)+"%";}
+  function animateScreen(){el.capMain.classList.remove("is-entering");void el.capMain.offsetWidth;el.capMain.classList.add("is-entering");setTimeout(animateCounters,100);}
+  function animateCounters(){document.querySelectorAll("[data-count]").forEach(function(n){var end=parseInt(n.dataset.count,10);if(!isFinite(end))return;var start=0,t0=performance.now(),dur=600;function tick(t){var p=Math.min(1,(t-t0)/dur);n.textContent=Math.round(start+(end-start)*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(tick);}requestAnimationFrame(tick);});}
+  function toggleNav(force){state.navOpen=typeof force==="boolean"?force:!state.navOpen;el.capNav.classList.toggle("is-closed",!state.navOpen);document.body.classList.toggle("nav-closed",!state.navOpen);}
+  function toggleFullscreen(){if(document.fullscreenElement)exitFullscreen();else el.presentation.requestFullscreen&&el.presentation.requestFullscreen().catch(function(){});}
+  function exitFullscreen(){if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(function(){});}
+  function fullscreenUi(){el.btnExitFullscreen.hidden=!document.fullscreenElement;}
+  function setStatus(s){state.status=s;persistState(state.currentId,s);}
+  function persistState(id,status){if(state.token)ICAC_API.updatePresentation(state.token,id,status).catch(function(){});}
+  function toast(msg){var x=document.createElement("div");x.className="cap-toast";x.textContent=msg;document.body.appendChild(x);setTimeout(function(){x.classList.add("is-visible");},10);setTimeout(function(){x.classList.remove("is-visible");setTimeout(function(){x.remove();},250);},1800);}
+  function extractNumber(s){var m=(s||"").match(/\d+/);return m?m[0]:"•";}
+  function formatDate(v){if(!v)return"Por confirmar";var d=new Date(v);return isNaN(d)?"Por confirmar":d.toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"});}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 })();

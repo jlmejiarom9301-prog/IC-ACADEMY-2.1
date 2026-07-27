@@ -5,181 +5,173 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>IC Academy — Presentación del capacitador</title>
 <meta name="robots" content="noindex, nofollow" />
-<!--
-  ICAC - Modo presentación presencial para capacitadores.
-
-  IMPORTANTE: esta página es EXCLUSIVA para capacitadores. No es un portal
-  para colaboradores/asistentes y no debe compartirse ni indexarse. El
-  capacitador la proyecta en una pantalla y controla manualmente el avance
-  con el mouse, el teclado o los botones del panel de control inferior.
-
-  Requiere el parámetro ?session=TOKEN_PRESENTACION en la URL. Ese token es
-  distinto del token público de registro, del token individual del
-  colaborador y del token de resultado; nunca se muestra en pantalla.
--->
 <link rel="stylesheet" href="../assets/css/capacitador.css" />
 </head>
 <body>
 <div id="app">
-
-  <!-- Estado: cargando -->
   <section id="state-loading" class="cap-state">
     <div class="cap-spinner" role="status" aria-label="Cargando"></div>
-    <p class="cap-state__title">Cargando presentación…</p>
+    <p class="cap-state__title">Preparando la capacitación…</p>
   </section>
 
-  <!-- Estado: error genérico (el texto se llena dinámicamente según el código de error) -->
   <section id="state-error" class="cap-state" hidden>
     <div class="cap-state__icon" aria-hidden="true">!</div>
     <h1 id="error-title" class="cap-state__title">No se pudo cargar la presentación</h1>
     <p id="error-message" class="cap-state__message"></p>
   </section>
 
-  <!-- Presentación (oculta hasta que la carga sea exitosa) -->
   <div id="presentation" class="cap-presentation" hidden>
-
     <header class="cap-topbar">
-      <div class="cap-topbar__brand">
+      <button id="btn-nav-toggle" class="cap-icon-btn" type="button" aria-label="Mostrar u ocultar temario">☰</button>
+      <div class="cap-brand">
         <span class="cap-logo" aria-hidden="true">IC</span>
-        <span id="tb-course" class="cap-topbar__course">Curso</span>
+        <div>
+          <strong id="tb-course">Curso</strong>
+          <span id="tb-topic-indicator">Inicio</span>
+        </div>
       </div>
-      <div class="cap-topbar__meta">
+      <div class="cap-session-meta">
         <span id="tb-trainer"></span>
         <span id="tb-folio"></span>
-        <span id="tb-topic-indicator" class="cap-topbar__topic-indicator"></span>
       </div>
-      <button id="btn-exit-fullscreen" class="cap-btn-ghost" type="button" hidden>Salir de pantalla completa</button>
+      <div class="cap-progress-wrap" aria-label="Avance de la presentación">
+        <span id="progress-text">0 / 0</span>
+        <div class="cap-progress"><span id="progress-bar"></span></div>
+      </div>
+      <button id="btn-exit-fullscreen" class="cap-btn cap-btn--ghost" type="button" hidden>Salir de pantalla completa</button>
     </header>
 
-    <div class="cap-body">
-      <nav id="cap-nav" class="cap-nav" aria-label="Temas de la sesión">
-        <ol id="nav-list"></ol>
-      </nav>
+    <div class="cap-shell">
+      <aside id="cap-nav" class="cap-nav">
+        <div class="cap-nav__head">
+          <span>Temario</span>
+          <button id="btn-nav-close" class="cap-icon-btn" type="button" aria-label="Cerrar temario">×</button>
+        </div>
+        <div id="nav-list" class="cap-nav__list"></div>
+      </aside>
 
-      <main id="cap-main" class="cap-main">
-
-        <!-- Pantalla de inicio -->
-        <section id="screen-inicio" class="cap-screen" data-screen="inicio">
+      <main id="cap-main" class="cap-main" tabindex="-1">
+        <section id="screen-inicio" class="cap-screen cap-screen--hero" data-screen="inicio">
+          <div class="cap-hero-orb cap-hero-orb--one"></div>
+          <div class="cap-hero-orb cap-hero-orb--two"></div>
           <p class="cap-eyebrow">IC Academy · Capacitación presencial</p>
-          <h1 id="start-course" class="cap-h1">Código de Ética y Compliance</h1>
-          <div class="cap-start-meta">
-            <span>Capacitador: <strong id="start-trainer">—</strong></span>
-            <span>Fecha: <strong id="start-date">—</strong></span>
-            <span>Ubicación: <strong id="start-location">—</strong></span>
-            <span>Duración estimada: <strong id="start-duration">—</strong></span>
+          <h1 id="start-course" class="cap-hero-title">Código de Ética y Compliance</h1>
+          <p class="cap-hero-copy">Una experiencia de apoyo para facilitar la sesión, presentar los contenidos y conducir el registro y la evaluación.</p>
+          <div class="cap-meta-grid">
+            <article><span>Capacitador</span><strong id="start-trainer">—</strong></article>
+            <article><span>Fecha</span><strong id="start-date">—</strong></article>
+            <article><span>Ubicación</span><strong id="start-location">—</strong></article>
+            <article><span>Duración estimada</span><strong id="start-duration">—</strong></article>
           </div>
-          <div class="cap-start-actions">
-            <button id="btn-start" class="cap-btn cap-btn--primary" type="button">Iniciar capacitación</button>
-            <button id="btn-show-qr-from-start" class="cap-btn" type="button">Mostrar QR de registro</button>
+          <div class="cap-actions">
+            <button id="btn-start" class="cap-btn cap-btn--primary cap-btn--large" type="button">Iniciar capacitación</button>
+            <button id="btn-show-qr-from-start" class="cap-btn cap-btn--secondary cap-btn--large" type="button">Mostrar QR de registro</button>
           </div>
         </section>
 
-        <!-- Pantalla de tema (video) -->
         <section id="screen-tema" class="cap-screen" data-screen="tema" hidden>
-          <p id="topic-eyebrow" class="cap-eyebrow"></p>
-          <h1 id="topic-title" class="cap-h1"></h1>
-          <p id="topic-subtitle" class="cap-subtitle"></p>
+          <div id="topic-stage" class="cap-topic-stage"></div>
+          <div id="topic-context-actions" class="cap-context-actions"></div>
+        </section>
 
-          <div id="topic-video-wrap" class="cap-video-wrap">
-            <iframe id="topic-video" title="Video de apoyo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-          </div>
-          <div id="topic-video-unavailable" class="cap-video-unavailable" hidden>Video no disponible para este tema.</div>
-
-          <div id="topic-key-message" class="cap-key-message"></div>
-          <div id="topic-extra" class="cap-topic-extra"></div>
-          <p id="topic-support-text" class="cap-support-text"></p>
-
-          <div class="cap-topic-controls">
-            <button id="btn-prev" class="cap-btn" type="button">← Anterior</button>
-            <button id="btn-restart-video" class="cap-btn" type="button">Reiniciar video</button>
-            <button id="btn-next" class="cap-btn cap-btn--primary" type="button">Siguiente →</button>
+        <section id="screen-registro" class="cap-screen cap-screen--operation" data-screen="registro" hidden>
+          <div class="cap-operation-grid">
+            <div class="cap-operation-copy">
+              <p class="cap-eyebrow">Registro de asistencia</p>
+              <h1 class="cap-title">Escanea el código para registrar tu asistencia</h1>
+              <p class="cap-lead">El registro vincula a cada participante con esta sesión y habilita su acceso individual a la evaluación.</p>
+              <div class="cap-status-row">
+                <span id="registro-status" class="cap-status-pill">Registro abierto</span>
+                <span>Folio: <strong id="registro-folio">—</strong></span>
+                <span>Curso: <strong id="registro-course">—</strong></span>
+              </div>
+              <div class="cap-kpi-row">
+                <article><strong id="attendee-total">—</strong><span>Personas registradas</span></article>
+                <article><strong id="attendee-capacity">—</strong><span>Capacidad máxima</span></article>
+                <article><strong id="attendee-updated">—</strong><span>Última actualización</span></article>
+              </div>
+              <div class="cap-actions">
+                <button id="btn-refresh-count" class="cap-btn cap-btn--secondary" type="button">Actualizar conteo</button>
+                <button class="cap-btn cap-btn--ghost" data-jump="evaluacion" type="button">Ir a evaluación</button>
+              </div>
+            </div>
+            <div class="cap-qr-focus">
+              <div id="qr-registro-box" class="cap-qr-card"><img id="qr-registro-img" alt="Código QR de registro" /></div>
+              <div id="qr-registro-placeholder" class="cap-qr-placeholder" hidden>QR no disponible. Genera el acceso público de la sesión desde Airtable.</div>
+            </div>
           </div>
         </section>
 
-        <!-- Pantalla de registro de asistencia -->
-        <section id="screen-registro" class="cap-screen cap-screen--wide" data-screen="registro" hidden>
-          <p class="cap-eyebrow">Registro de asistencia</p>
-          <h1 class="cap-h1">Escanea el código para registrar tu asistencia</h1>
-
-          <div id="qr-registro-box" class="cap-qr-box">
-            <img id="qr-registro-img" src="" alt="Código QR de registro de asistencia" />
-          </div>
-          <div id="qr-registro-placeholder" class="cap-qr-placeholder" hidden>QR de registro no generado. Solicítalo desde Airtable antes de proyectar esta pantalla.</div>
-
-          <div class="cap-start-meta">
-            <span>Folio de sesión: <strong id="registro-folio">—</strong></span>
-            <span>Curso: <strong id="registro-course">—</strong></span>
-          </div>
-
-          <span id="registro-status" class="cap-status-pill cap-status-pill--open">Registro abierto</span>
-
-          <div class="cap-attendee-count" id="attendee-count-box">
-            <div><strong id="attendee-total">—</strong>Personas registradas</div>
-            <div><strong id="attendee-capacity">—</strong>Capacidad máxima</div>
-            <div><strong id="attendee-updated">—</strong>Última actualización</div>
-          </div>
-
-          <div class="cap-topic-controls">
-            <button id="btn-refresh-count" class="cap-btn" type="button">Actualizar conteo</button>
-          </div>
-        </section>
-
-        <!-- Pantalla de evaluación -->
-        <section id="screen-evaluacion" class="cap-screen" data-screen="evaluacion" hidden>
-          <p class="cap-eyebrow">Evaluación del curso</p>
-          <h1 class="cap-h1">Evaluación del curso</h1>
-          <p class="cap-subtitle">Al terminar el contenido, cada participante presenta su evaluación desde su propio celular.</p>
-
-          <ol class="cap-steps">
-            <li><b>1.</b> Registra tu asistencia escaneando el código QR (si aún no lo has hecho).</li>
-            <li><b>2.</b> Al registrarte, tu celular te muestra tu acceso individual a la evaluación.</li>
-            <li><b>3.</b> Desde ese acceso, inicia y presenta tu evaluación.</li>
-          </ol>
-
-          <div id="eval-qr-box" class="cap-qr-box">
-            <img id="eval-qr-img" src="" alt="Código QR de registro, punto de partida para acceder a la evaluación" />
-          </div>
-          <div id="eval-unavailable" class="cap-state__message" hidden>La evaluación de esta sesión no está disponible en este momento.</div>
-
-          <div class="cap-eval-meta">
-            <span>Tiempo estimado: <strong id="eval-time">—</strong></span>
-            <span>Calificación mínima: <strong id="eval-min-score">—</strong></span>
-            <span>Máximo de intentos: <strong id="eval-max-attempts">—</strong></span>
+        <section id="screen-evaluacion" class="cap-screen cap-screen--operation" data-screen="evaluacion" hidden>
+          <div class="cap-operation-grid">
+            <div class="cap-operation-copy">
+              <p class="cap-eyebrow">Evaluación del curso</p>
+              <h1 class="cap-title">Cada participante accede desde su celular</h1>
+              <ol class="cap-steps">
+                <li><b>1</b><span>Registra tu asistencia si aún no lo has hecho.</span></li>
+                <li><b>2</b><span>Abre el acceso individual generado al registrarte.</span></li>
+                <li><b>3</b><span>Inicia y completa la evaluación.</span></li>
+              </ol>
+              <div class="cap-kpi-row">
+                <article><strong id="eval-time">—</strong><span>Tiempo estimado</span></article>
+                <article><strong id="eval-min-score">—</strong><span>Calificación mínima</span></article>
+                <article><strong id="eval-max-attempts">—</strong><span>Máximo de intentos</span></article>
+              </div>
+              <div class="cap-actions">
+                <button class="cap-btn cap-btn--secondary" data-jump="registro" type="button">Volver al registro</button>
+                <button class="cap-btn cap-btn--primary" data-jump="cierre" type="button">Ir al cierre</button>
+              </div>
+            </div>
+            <div class="cap-qr-focus">
+              <div id="eval-qr-box" class="cap-qr-card"><img id="eval-qr-img" alt="Código QR para iniciar el flujo de evaluación" /></div>
+              <div id="eval-unavailable" class="cap-qr-placeholder" hidden>La evaluación no está disponible en este momento.</div>
+            </div>
           </div>
         </section>
 
-        <!-- Pantalla de cierre -->
-        <section id="screen-cierre" class="cap-screen" data-screen="cierre" hidden>
+        <section id="screen-cierre" class="cap-screen cap-screen--closing" data-screen="cierre" hidden>
+          <div class="cap-closing-mark">✓</div>
           <p class="cap-eyebrow">Gracias por tu participación</p>
-          <h1 class="cap-h1">Hemos concluido la capacitación</h1>
-          <p class="cap-subtitle">Recuerda completar tu evaluación desde tu acceso individual para poder obtener tu constancia.</p>
-          <p class="cap-contact" id="cierre-contacto">Si tienes dudas, contacta a soporte de capacitación.</p>
-          <div class="cap-topic-controls">
-            <button id="btn-show-eval-from-close" class="cap-btn" type="button">Mostrar QR de evaluación</button>
+          <h1 class="cap-hero-title">Hemos concluido la capacitación</h1>
+          <p class="cap-hero-copy">Recuerda completar tu evaluación desde tu acceso individual para concluir el proceso.</p>
+          <p id="cierre-contacto" class="cap-contact">Si tienes dudas, contacta a soporte de capacitación.</p>
+          <div class="cap-actions">
+            <button id="btn-show-eval-from-close" class="cap-btn cap-btn--secondary" type="button">Mostrar evaluación</button>
             <button id="btn-end-presentation" class="cap-btn cap-btn--primary" type="button">Finalizar presentación</button>
           </div>
         </section>
-
       </main>
     </div>
 
-    <footer id="cap-control-panel" class="cap-control-panel" aria-label="Panel de control del capacitador">
+    <footer id="cap-control-panel" class="cap-control-panel">
       <button class="cap-control-btn" data-action="inicio" type="button">Inicio</button>
-      <button class="cap-control-btn" data-action="prev" type="button">Tema anterior</button>
-      <button class="cap-control-btn" data-action="next" type="button">Tema siguiente</button>
-      <button class="cap-control-btn" data-action="show-video" type="button">Mostrar video</button>
-      <button class="cap-control-btn" data-action="restart-video" type="button">Reiniciar video</button>
-      <button class="cap-control-btn" data-action="show-registro" type="button">QR de registro</button>
-      <button class="cap-control-btn" data-action="show-evaluacion" type="button">QR de evaluación</button>
+      <button class="cap-control-btn" data-action="prev" type="button">← Anterior</button>
+      <button class="cap-control-btn cap-control-btn--primary" data-action="next" type="button">Siguiente →</button>
+      <span class="cap-control-divider"></span>
+      <button class="cap-control-btn" data-action="show-registro" type="button">Registro</button>
+      <button class="cap-control-btn" data-action="show-evaluacion" type="button">Evaluación</button>
       <button class="cap-control-btn" data-action="show-cierre" type="button">Cierre</button>
       <span class="cap-control-spacer"></span>
-      <span class="cap-kbd-hint">←/→ navegar · F pantalla completa · Esc salir</span>
-      <button class="cap-control-btn cap-control-btn--accent" data-action="fullscreen" type="button">Pantalla completa</button>
-      <button class="cap-control-btn" data-action="salir" type="button">Salir</button>
+      <span class="cap-kbd-hint">←/→ navegar · F pantalla completa · R registro · E evaluación</span>
+      <button class="cap-control-btn" data-action="fullscreen" type="button">Pantalla completa</button>
     </footer>
   </div>
-</div>
 
+  <div id="video-modal" class="cap-modal" hidden>
+    <div class="cap-modal__backdrop" data-close-video></div>
+    <section class="cap-modal__panel" role="dialog" aria-modal="true" aria-labelledby="video-modal-title">
+      <div class="cap-modal__head">
+        <div><span class="cap-eyebrow">Recurso audiovisual</span><h2 id="video-modal-title">Video</h2></div>
+        <button class="cap-icon-btn" type="button" data-close-video aria-label="Cerrar video">×</button>
+      </div>
+      <div class="cap-video-frame"><iframe id="video-modal-frame" title="Video de apoyo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+      <div class="cap-modal__actions">
+        <button id="btn-restart-video" class="cap-btn cap-btn--secondary" type="button">Reiniciar video</button>
+        <button class="cap-btn cap-btn--primary" type="button" data-close-video>Volver al contenido</button>
+      </div>
+    </section>
+  </div>
+</div>
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/api.js"></script>
 <script src="../assets/js/capacitador.js"></script>
