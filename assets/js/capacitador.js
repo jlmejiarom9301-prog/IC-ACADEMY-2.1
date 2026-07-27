@@ -19,23 +19,39 @@
   ];
 
   var visualMap = [
+    { test: /diez principios éticos|diez principios eticos|principios éticos|principios eticos/i, image: "diez-principios-eticos.jpg", accent: "ethics" },
+    { test: /fidelidad a las leyes|cumplimiento legal/i, image: "fidelidad-leyes.jpg", accent: "ethics" },
+    { test: /integridad|transparencia/i, image: "integridad-transparencia.jpg", accent: "ethics" },
+    { test: /beneficios indebidos|anticorrupci[oó]n|soborno/i, image: "beneficios-indebidos-anticorrupcion.jpg", accent: "ethics" },
+    { test: /competencia justa/i, image: "competencia-justa.jpg", accent: "ethics" },
+    { test: /conflicto de interés|conflicto de interes/i, image: "conflicto-interes.jpg", accent: "assets" },
+    { test: /información confidencial|informacion confidencial/i, image: "informacion-confidencial.jpg", accent: "assets" },
+    { test: /importación|importacion|exportación|exportacion/i, image: "importacion-exportacion.jpg", accent: "supply" },
+    { test: /publicación de información|publicacion de informacion|registros fidedignos/i, image: "publicacion-informacion.jpg", accent: "assets" },
+    { test: /propiedad intelectual/i, image: "propiedad-intelectual.jpg", accent: "assets" },
+    { test: /abastecimiento responsable|aprovisionamiento responsable|materia prima|minerales de conflicto/i, image: "abastecimiento-responsable.jpg", accent: "supply" },
+    { test: /canal ético|canal etico|canal de denuncia|denuncia|represalias/i, image: "canal-etico.jpg", accent: "whistle" },
+    { test: /compromiso|adhesión|adhesion|firma/i, image: "compromiso-firma.jpg", accent: "commitment" },
+    { test: /portada.*ética|etica en la empresa|ética en la empresa/i, image: "portada-etica.jpg", accent: "ethics" },
+    { test: /portada.*salud|salud y seguridad/i, image: "portada-salud-seguridad.jpg", accent: "safety" },
+    { test: /prevención|prevencion|riesgos|epp|equipo de protección|equipo de proteccion/i, image: "prevencion-riesgos-epp.jpg", accent: "safety" },
+    { test: /emergencias|evacuación|evacuacion|alarma/i, image: "emergencias-comunicacion.jpg", accent: "safety" },
+    { test: /no discriminación|no discriminacion|diversidad|inclusi[oó]n|raza|sexo|edad|embarazo|orientaci[oó]n sexual|discapacidad/i, image: "no-discriminacion.jpg", accent: "rights" },
+    { test: /trato digno|acoso|abuso|coerción|coercion/i, image: "trato-digno.jpg", accent: "rights" },
+    { test: /libertad de asociación|libertad de asociacion|reuni[oó]n|sindicato/i, image: "libertad-asociacion.jpg", accent: "rights" },
+    { test: /horario|jornada|48 horas|24 horas|12 horas|horas extra|descanso/i, image: "jornada-descanso-horas-extra.jpg", accent: "labor" },
+    { test: /salarios|salario|prestaciones|beneficios sociales|beneficios|remuneración|remuneracion/i, image: "salarios-beneficios.jpg", accent: "labor" },
+    { test: /portada.*medioambiental|portada.*medio ambiente|medio ambiente|medioambiental/i, image: "portada-medioambiental.jpg", accent: "environment" },
+    { test: /protección del medio ambiente|proteccion del medio ambiente/i, image: "proteccion-medio-ambiente.jpg", accent: "environment" },
+    { test: /sustancias peligrosas/i, image: "sustancias-peligrosas.jpg", accent: "environment" },
+    { test: /restricciones.*productos|reciclaje|eliminación|eliminacion/i, image: "restricciones-reciclaje.jpg", accent: "environment" },
     { test: /misión|mision|propósito|proposito/i, image: "ethics-team.jpg", accent: "mission" },
     { test: /fundamento|relaciones comerciales|expectativas|estándares|estandares/i, image: "foundation-pillars.jpg", accent: "foundation" },
     { test: /confianza|cadena de valor|largo plazo/i, image: "trust-network.jpg", accent: "trust" },
     { test: /alcance|aplicación|aplicacion|proveedores|suministradores|empleados/i, image: "scope-meeting.jpg", accent: "scope" },
-    { test: /no discriminación|no discriminacion|diversidad|inclusi[oó]n|raza|sexo|edad|embarazo|orientaci[oó]n sexual|discapacidad/i, image: "inclusion-team.jpg", accent: "rights" },
-    { test: /derechos fundamentales|dignidad|trabajo forzado|trabajo infantil|menores|15 años|18 años/i, image: "child-protection.jpg", accent: "rights" },
-    { test: /horario|jornada|48 horas|24 horas|12 horas|horas extra|descanso/i, image: "hours-rest-overtime.jpg", accent: "labor" },
-    { test: /salarios|salario|prestaciones|beneficios sociales|remuneración|remuneracion/i, image: "salary-balance.jpg", accent: "labor" },
-    { test: /salud|seguridad|epp|emergencia|riesgos|proteger/i, image: "ethics-team.jpg", accent: "safety" },
-    { test: /fidelidad|leyes|integridad|beneficios indebidos|competencia justa|soborno/i, image: "ethics-team.jpg", accent: "ethics" },
-    { test: /información confidencial|informacion confidencial|propiedad intelectual|datos|seguridad de la informaci[oó]n/i, image: "confidentiality-security.jpg", accent: "assets" },
-    { test: /conflicto de interés|conflicto de interes|decisiones objetivas/i, image: "decision-path.jpg", accent: "assets" },
-    { test: /cadena de suministro|aduanas|importación|importacion|exportación|exportacion|registros fidedignos|minerales de conflicto|aprovisionamiento/i, image: "trust-network.jpg", accent: "supply" },
-    { test: /medio ambiente|medioambiental|sustancias peligrosas|restricciones de productos|reciclaje|permisos/i, image: "principles-sequence.jpg", accent: "environment" },
-    { test: /canal de denuncia|denuncia|represalias/i, image: "support-dialogue.jpg", accent: "whistle" },
-    { test: /compromiso|adhesión|adhesion|firma/i, image: "decision-path.jpg", accent: "commitment" }
+    { test: /derechos fundamentales|trabajo forzado|trabajo infantil|menores|15 años|18 años/i, image: "child-protection.jpg", accent: "rights" }
   ];
+
 
 
   document.addEventListener("DOMContentLoaded", init);
