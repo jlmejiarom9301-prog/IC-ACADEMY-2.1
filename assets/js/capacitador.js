@@ -19,20 +19,24 @@
   ];
 
   var visualMap = [
-    { test: /misión|mision|propósito|proposito/i, image: "slide-02.jpg", accent: "mission" },
-    { test: /fundamento|relaciones comerciales|expectativas|estándares|estandares|cumplimiento/i, image: "slide-03.jpg", accent: "foundation" },
-    { test: /confianza|cadena de valor|largo plazo/i, image: "slide-04.jpg", accent: "trust" },
-    { test: /alcance|aplicación|aplicacion|proveedores|suministradores|empleados/i, image: "slide-05.jpg", accent: "scope" },
-    { test: /derechos fundamentales|dignidad|trabajo forzado|trabajo infantil|menores|15 años|18 años/i, image: "slide-06.jpg", accent: "rights" },
-    { test: /horario|jornada|48 horas|24 horas|12 horas|salarios|no discriminación|no discriminacion|libertad de asociación|asociacion/i, image: "slide-07.jpg", accent: "labor" },
-    { test: /salud|seguridad|epp|emergencia|riesgos|proteger/i, image: "slide-08.jpg", accent: "safety" },
-    { test: /fidelidad|leyes|integridad|beneficios indebidos|competencia justa|soborno/i, image: "slide-09.jpg", accent: "ethics" },
-    { test: /información confidencial|informacion confidencial|conflicto de interés|conflicto de interes|propiedad intelectual|decisiones objetivas/i, image: "slide-10.jpg", accent: "assets" },
-    { test: /cadena de suministro|aduanas|importación|importacion|exportación|exportacion|registros fidedignos|minerales de conflicto|aprovisionamiento/i, image: "slide-11.jpg", accent: "supply" },
-    { test: /medio ambiente|medioambiental|sustancias peligrosas|restricciones de productos|reciclaje|permisos/i, image: "slide-12.jpg", accent: "environment" },
-    { test: /canal de denuncia|denuncia|represalias|confidencial/i, image: "slide-13.jpg", accent: "whistle" },
-    { test: /compromiso|adhesión|adhesion|firma/i, image: "slide-14.jpg", accent: "commitment" }
+    { test: /misión|mision|propósito|proposito/i, image: "ethics-team.jpg", accent: "mission" },
+    { test: /fundamento|relaciones comerciales|expectativas|estándares|estandares/i, image: "foundation-pillars.jpg", accent: "foundation" },
+    { test: /confianza|cadena de valor|largo plazo/i, image: "trust-network.jpg", accent: "trust" },
+    { test: /alcance|aplicación|aplicacion|proveedores|suministradores|empleados/i, image: "scope-meeting.jpg", accent: "scope" },
+    { test: /no discriminación|no discriminacion|diversidad|inclusi[oó]n|raza|sexo|edad|embarazo|orientaci[oó]n sexual|discapacidad/i, image: "inclusion-team.jpg", accent: "rights" },
+    { test: /derechos fundamentales|dignidad|trabajo forzado|trabajo infantil|menores|15 años|18 años/i, image: "child-protection.jpg", accent: "rights" },
+    { test: /horario|jornada|48 horas|24 horas|12 horas|horas extra|descanso/i, image: "hours-rest-overtime.jpg", accent: "labor" },
+    { test: /salarios|salario|prestaciones|beneficios sociales|remuneración|remuneracion/i, image: "salary-balance.jpg", accent: "labor" },
+    { test: /salud|seguridad|epp|emergencia|riesgos|proteger/i, image: "ethics-team.jpg", accent: "safety" },
+    { test: /fidelidad|leyes|integridad|beneficios indebidos|competencia justa|soborno/i, image: "ethics-team.jpg", accent: "ethics" },
+    { test: /información confidencial|informacion confidencial|propiedad intelectual|datos|seguridad de la informaci[oó]n/i, image: "confidentiality-security.jpg", accent: "assets" },
+    { test: /conflicto de interés|conflicto de interes|decisiones objetivas/i, image: "decision-path.jpg", accent: "assets" },
+    { test: /cadena de suministro|aduanas|importación|importacion|exportación|exportacion|registros fidedignos|minerales de conflicto|aprovisionamiento/i, image: "trust-network.jpg", accent: "supply" },
+    { test: /medio ambiente|medioambiental|sustancias peligrosas|restricciones de productos|reciclaje|permisos/i, image: "principles-sequence.jpg", accent: "environment" },
+    { test: /canal de denuncia|denuncia|represalias/i, image: "support-dialogue.jpg", accent: "whistle" },
+    { test: /compromiso|adhesión|adhesion|firma/i, image: "decision-path.jpg", accent: "commitment" }
   ];
+
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -295,8 +299,36 @@
     return /15\s*años|18\s*años|menores/i.test(text);
   }
 
+  function topicEmoji(topic) {
+    var accent = topic && topic.accent ? topic.accent : "default";
+    var map = {
+      mission: "🎯",
+      foundation: "🏛️",
+      trust: "🤝",
+      scope: "🌐",
+      rights: "🫶",
+      labor: "⏱️",
+      safety: "🦺",
+      ethics: "✅",
+      assets: "🔐",
+      supply: "🚚",
+      environment: "🌱",
+      whistle: "📣",
+      commitment: "✍️",
+      default: "✨"
+    };
+    return map[accent] || map.default;
+  }
+
+  function cleanItemText(value) {
+    return String(value || "")
+      .replace(/^\s*\d+\s*[.)\-–—·:]?\s*/, "")
+      .replace(/^\s*[•\-–—]\s*/, "")
+      .trim();
+  }
+
   function baseHead(topic) {
-    return '<div class="cap-heading"><p class="cap-eyebrow">' + esc(topic.section) + '</p><h1 class="cap-title">' + esc(topic.title) + "</h1>" + (topic.subtitle ? '<p class="cap-lead">' + esc(topic.subtitle) + "</p>" : "") + "</div>";
+    return '<div class="cap-heading"><p class="cap-eyebrow">' + topicEmoji(topic) + ' ' + esc(topic.section) + '</p><h1 class="cap-title"><span class="cap-title-emoji" aria-hidden="true">' + topicEmoji(topic) + '</span>' + esc(topic.title) + "</h1>" + (topic.subtitle ? '<p class="cap-lead">' + esc(topic.subtitle) + "</p>" : "") + "</div>";
   }
 
   function allText(topic) {
@@ -360,10 +392,17 @@
     var items = splitItems(topic);
     if (items.length < 2) items = allText(topic);
     var cardsHtml = items.map(function (item, index) {
-      var parts = item.split(":");
-      var heading = parts.length > 1 ? parts.shift() : "Punto " + (index + 1);
-      var body = parts.length ? parts.join(":") : item;
-      return '<article class="cap-info-card cap-stagger" style="--i:' + index + '"><span class="cap-info-card__number">' + String(index + 1).padStart(2, "0") + '</span><h3>' + esc(heading) + "</h3><p>" + esc(body) + "</p></article>";
+      var clean = cleanItemText(item);
+      var parts = clean.split(":");
+      var heading = "";
+      var body = "";
+      if (parts.length > 1 && parts[0].trim().length < 80) {
+        heading = parts.shift().trim();
+        body = parts.join(":").trim();
+      } else {
+        heading = clean;
+      }
+      return '<article class="cap-info-card cap-stagger" style="--i:' + index + '"><span class="cap-info-card__number">' + String(index + 1).padStart(2, "0") + '</span><h3>' + esc(heading) + "</h3>" + (body ? '<p>' + esc(body) + '</p>' : '') + '</article>';
     }).join("");
     return '<article class="cap-layout cap-layout--wide"><div class="cap-copy-column cap-copy-column--wide">' + baseHead(topic) + '<div class="cap-info-grid">' + cardsHtml + "</div></div>" + visualPanel(topic) + "</article>";
   }
@@ -403,16 +442,18 @@
 
   function videoPrinciple(topic) {
     return '<article class="cap-layout cap-layout--principle"><div class="cap-copy-column"><div class="cap-principle-badge">' + esc(extractNumber(topic.title)) + "</div>" + baseHead(topic) + textBlocks(topic) +
-      '<button class="cap-inline-video" type="button" data-open-video="' + esc(topic.id) + '"><span class="cap-play-button">▶</span><span><strong>Ver recurso audiovisual</strong><small>' + esc(topic.duration || "Video de apoyo") + "</small></span></button></div>" +
+      '<button class="cap-inline-video" type="button" data-open-video="' + esc(topic.id) + '"><span class="cap-play-button">▶</span><span><strong>Ver video aquí</strong><small>Se reproduce dentro de esta página · ' + esc(topic.duration || "Video de apoyo") + "</small></span></button></div>" +
       visualPanel(topic, { label: "Recurso visual del principio " + topic.title }) + "</article>";
   }
 
   function whistle(topic) {
+    var phone = topic.contactPhone || "800 323 0801 ext 4";
+    var email = topic.contactEmail || "compliance@inter-con.com.mx";
     return '<article class="cap-layout cap-layout--whistle"><div class="cap-copy-column">' + baseHead(topic) +
-      '<div class="cap-confidential-banner">100% confidencial y estrictamente sin represalias</div>' +
+      '<div class="cap-confidential-banner">📣 100% confidencial y estrictamente sin represalias</div>' +
       '<div class="cap-contact-grid">' +
-      (topic.contactEmail ? '<article><span>Correo electrónico</span><strong>' + esc(topic.contactEmail) + "</strong></article>" : "") +
-      (topic.contactPhone ? '<article><span>Teléfono</span><strong>' + esc(topic.contactPhone) + "</strong></article>" : "") +
+      '<article><span>Correo electrónico</span><strong>' + esc(email) + "</strong></article>" +
+      '<article><span>Teléfono</span><strong>' + esc(phone) + "</strong></article>" +
       "</div>" + textBlocks(topic) + "</div>" + visualPanel(topic) + "</article>";
   }
 
@@ -428,11 +469,11 @@
   }
 
   function renderContextActions(topic) {
-    var html = '<button class="cap-btn cap-btn--ghost" data-topic-action="prev" type="button">← Anterior</button>';
+    var html = '<button class="cap-btn cap-btn--ghost" data-topic-action="prev" type="button">⬅️ Anterior</button>';
     if (topic.embedUrl) {
-      html += '<button class="cap-btn cap-btn--secondary" data-open-video="' + esc(topic.id) + '" type="button">Reproducir video</button>';
+      html += '<button class="cap-btn cap-btn--secondary" data-open-video="' + esc(topic.id) + '" type="button">🎬 Ver video</button>';
     }
-    html += '<button class="cap-btn cap-btn--primary" data-topic-action="next" type="button">Siguiente →</button>';
+    html += '<button class="cap-btn cap-btn--primary" data-topic-action="next" type="button">Siguiente ➡️</button>';
     el.topicContextActions.innerHTML = html;
     el.topicContextActions.querySelector('[data-topic-action="prev"]').onclick = prev;
     el.topicContextActions.querySelector('[data-topic-action="next"]').onclick = next;
@@ -494,7 +535,7 @@
       }
     }).finally(function () {
       el.btnRefreshCount.disabled = false;
-      el.btnRefreshCount.textContent = "Actualizar conteo";
+      el.btnRefreshCount.textContent = "🔄 Actualizar conteo";
     });
   }
 
