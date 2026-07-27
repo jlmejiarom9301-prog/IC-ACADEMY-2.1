@@ -407,6 +407,7 @@
   function cards(topic) {
     var items = splitItems(topic);
     if (items.length < 2) items = allText(topic);
+    var dense = items.length >= 7;
     var cardsHtml = items.map(function (item, index) {
       var clean = cleanItemText(item);
       var parts = clean.split(":");
@@ -420,7 +421,7 @@
       }
       return '<article class="cap-info-card cap-stagger" style="--i:' + index + '"><span class="cap-info-card__number">' + String(index + 1).padStart(2, "0") + '</span><h3>' + esc(heading) + "</h3>" + (body ? '<p>' + esc(body) + '</p>' : '') + '</article>';
     }).join("");
-    return '<article class="cap-layout cap-layout--wide"><div class="cap-copy-column cap-copy-column--wide">' + baseHead(topic) + '<div class="cap-info-grid">' + cardsHtml + "</div></div>" + visualPanel(topic) + "</article>";
+    return '<article class="cap-layout cap-layout--wide' + (dense ? ' cap-layout--dense' : '') + '"><div class="cap-copy-column cap-copy-column--wide">' + baseHead(topic) + '<div class="cap-info-grid' + (dense ? ' cap-info-grid--dense' : '') + '">' + cardsHtml + "</div></div>" + visualPanel(topic) + "</article>";
   }
 
   function diagram(topic) {
